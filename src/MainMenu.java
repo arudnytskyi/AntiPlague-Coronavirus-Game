@@ -1,7 +1,10 @@
+import windows.DifficultySelectionDialog;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 public class MainMenu extends JFrame {
 	public MainMenu() {
@@ -73,18 +76,34 @@ public class MainMenu extends JFrame {
 		// Add panel to frame
 		add(panel);
 
+		// Add Ctrl+Shift+Q shortcut
+		addKeyBindings(panel);
+
 		// Make frame visible
 		setVisible(true);
 	}
 
-	// Placeholder for difficulty selection
+	// Display difficulty selection dialog
 	private void showDifficultySelection() {
-		JOptionPane.showMessageDialog(this, "Difficulty selection will be implemented later.", "New Game", JOptionPane.INFORMATION_MESSAGE);
+		DifficultySelectionDialog dialog = new DifficultySelectionDialog(this);
+		dialog.setVisible(true);
 	}
 
 	// Placeholder for high scores
 	private void showHighScores() {
 		JOptionPane.showMessageDialog(this, "High Scores will be implemented later.", "High Scores", JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	// Add Ctrl+Shift+Q shortcut
+	private void addKeyBindings(JPanel panel) {
+		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK), "quitToMenu");
+		panel.getActionMap().put("quitToMenu", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainMenu.this, "Returning to Main Menu", "Shortcut Triggered", JOptionPane.INFORMATION_MESSAGE);
+				// Logic for quitting the current game (if implemented)
+			}
+		});
 	}
 
 	// Main method to run the program
