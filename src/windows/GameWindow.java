@@ -1,11 +1,12 @@
 package windows;
 
 import utilities.Country;
+import utilities.Upgrade;
+import utilities.UpgradeStoreDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ public class GameWindow extends JFrame {
 	private Timer timer;
 	private String difficulty;
 	private double infectionRate;
+	private List<Upgrade> upgrades; // Declare the upgrades variable
 
 	public GameWindow(String difficulty) {
 		this.difficulty = difficulty;
@@ -26,15 +28,18 @@ public class GameWindow extends JFrame {
 		// Set infection rate based on difficulty
 		switch (difficulty) {
 			case "Easy":
-				infectionRate = 0.05; // 5% chance of infection
+				infectionRate = 0.05;
 				break;
 			case "Medium":
-				infectionRate = 0.1; // 10% chance of infection
+				infectionRate = 0.1;
 				break;
 			case "Hard":
-				infectionRate = 0.2; // 20% chance of infection
+				infectionRate = 0.2;
 				break;
 		}
+
+		// Initialize the upgrades list
+		upgrades = initializeUpgrades();
 
 		// Set up the frame
 		setTitle("AntiPlague Game - " + difficulty + " Mode");
@@ -43,18 +48,20 @@ public class GameWindow extends JFrame {
 		setLocationRelativeTo(null);
 		setResizable(false);
 
-		// Main panel for layout
-		JPanel panel = new JPanel();
-		panel.setLayout(new BorderLayout());
+		// Main panel
+		JPanel panel = new JPanel(new BorderLayout());
 
 		// Top panel for score and timer
-		JPanel topPanel = new JPanel(new GridLayout(1, 2));
+		JPanel topPanel = new JPanel(new GridLayout(1, 3));
 		scoreLabel = new JLabel("Score: 0");
 		timerLabel = new JLabel("Time: 0s");
+		JButton upgradeButton = new JButton("Upgrades");
+		upgradeButton.addActionListener(e -> openUpgradeStore());
 		scoreLabel.setFont(new Font("Arial", Font.BOLD, 16));
 		timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
 		topPanel.add(scoreLabel);
 		topPanel.add(timerLabel);
+		topPanel.add(upgradeButton);
 		panel.add(topPanel, BorderLayout.NORTH);
 
 		// Map panel
@@ -62,10 +69,10 @@ public class GameWindow extends JFrame {
 		mapPanel.setLayout(null);
 		panel.add(mapPanel, BorderLayout.CENTER);
 
-		// Add countries to the map
+		// Initialize countries and add them to the map
 		countries = initializeCountries(mapPanel);
 
-		// Add control panel
+		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
 		JButton pauseButton = new JButton("Pause");
 		JButton quitButton = new JButton("Quit");
@@ -91,9 +98,33 @@ public class GameWindow extends JFrame {
 		setVisible(true);
 	}
 
+	private List<Upgrade> initializeUpgrades() {
+		List<Upgrade> upgradeList = new ArrayList<>();
+		upgradeList.add(new Upgrade("Quarantine", 50, "Reduce infection rate in one country.", () -> {
+			infectionRate -= 0.01; // Reduce infection rate globally
+			JOptionPane.showMessageDialog(this, "Infection rate reduced globally!");
+		}));
+		upgradeList.add(new Upgrade("Vaccination", 100, "Prevent infection in one country.", () -> {
+			for (Country country : countries) {
+				if (!country.isInfected()) {
+					JOptionPane.showMessageDialog(this, country.getName() + " vaccinated!");
+					break;
+				}
+			}
+		}));
+		return upgradeList;
+	}
+
+	private void openUpgradeStore() {
+		UpgradeStoreDialog store = new UpgradeStoreDialog(this, upgrades, score);
+		store.setVisible(true);
+		score = store.getRemainingPoints();
+		scoreLabel.setText("Score: " + score);
+	}
+
 	private List<Country> initializeCountries(JPanel mapPanel) {
 		List<Country> countryList = new ArrayList<>();
-		// Add 10 countries with positions
+		// Define countries and their positions
 		String[] countryNames = {"USA", "Canada", "Mexico", "Brazil", "UK", "France", "Germany", "India", "China", "Australia"};
 		int[][] positions = {
 				{100, 100}, {150, 50}, {100, 200}, {200, 300}, {400, 50},
@@ -119,8 +150,40 @@ public class GameWindow extends JFrame {
 		for (Country country : countries) {
 			country.updateInfection();
 		}
-		score++;
+
+		// Update the score based on the number of uninfected countries
+		score = calculateScore();
 		scoreLabel.setText("Score: " + score);
+
+		// Check if the game is over
+		if (isGameOver()) {
+			endGame();
+		}
+	}
+
+	private int calculateScore() {
+		int uninfectedCount = 0;
+		for (Country country : countries) {
+			if (!country.isInfected()) {
+				uninfectedCount++;
+			}
+		}
+		return uninfectedCount * 10; // 10 points per uninfected country
+	}
+
+	private boolean isGameOver() {
+		for (Country country : countries) {
+			if (!country.isInfected()) {
+				return false; // At least one country is still safe
+			}
+		}
+		return true; // All countries are infected
+	}
+
+	private void endGame() {
+		timer.stop();
+		JOptionPane.showMessageDialog(this, "Game Over! Your Score: " + score, "Game Over", JOptionPane.INFORMATION_MESSAGE);
+		dispose();
 	}
 
 	private void pauseGame() {
@@ -148,5 +211,9 @@ public class GameWindow extends JFrame {
 				quitGame();
 			}
 		});
+	}
+
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(() -> new GameWindow("Medium")); // Test with medium difficulty
 	}
 }

@@ -17,9 +17,12 @@ public class HighScoreManager {
 	public void addHighScore(String playerName, int score) {
 		highScores.add(new HighScore(playerName, score));
 		Collections.sort(highScores); // Sort by score descending
+
+		// Ensure only top 10 scores are kept (using a new ArrayList to avoid SubList issue)
 		if (highScores.size() > 10) {
-			highScores = highScores.subList(0, 10); // Keep top 10
+			highScores = new ArrayList<>(highScores.subList(0, 10)); // Create a new list from the subList
 		}
+
 		saveHighScores();
 	}
 
