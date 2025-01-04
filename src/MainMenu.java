@@ -1,13 +1,19 @@
+import utilities.HighScoreManager;
 import windows.DifficultySelectionDialog;
+import windows.HighScoresWindow;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 public class MainMenu extends JFrame {
+	private HighScoreManager highScoreManager; // Declare at class level
+
 	public MainMenu() {
+		// Initialize high score manager
+		highScoreManager = new HighScoreManager();
+
 		// Set up the frame
 		setTitle("AntiPlague Coronavirus Game");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -52,26 +58,9 @@ public class MainMenu extends JFrame {
 		panel.add(buttonPanel, BorderLayout.CENTER);
 
 		// Add action listeners
-		newGameButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showDifficultySelection();
-			}
-		});
-
-		highScoresButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showHighScores();
-			}
-		});
-
-		exitButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				System.exit(0);
-			}
-		});
+		newGameButton.addActionListener(e -> showDifficultySelection());
+		highScoresButton.addActionListener(e -> showHighScores());
+		exitButton.addActionListener(e -> System.exit(0));
 
 		// Add panel to frame
 		add(panel);
@@ -89,14 +78,21 @@ public class MainMenu extends JFrame {
 		dialog.setVisible(true);
 	}
 
-	// Placeholder for high scores
+	// Show high scores
 	private void showHighScores() {
-		JOptionPane.showMessageDialog(this, "High Scores will be implemented later.", "High Scores", JOptionPane.INFORMATION_MESSAGE);
+		HighScoresWindow highScoresWindow = new HighScoresWindow(this, highScoreManager);
+		highScoresWindow.setVisible(true);
+	}
+
+	// Add method to simulate adding a high score
+	private void simulateAddHighScore(String playerName, int score) {
+		highScoreManager.addHighScore(playerName, score);
 	}
 
 	// Add Ctrl+Shift+Q shortcut
 	private void addKeyBindings(JPanel panel) {
-		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK), "quitToMenu");
+		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+				KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK), "quitToMenu");
 		panel.getActionMap().put("quitToMenu", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -108,6 +104,12 @@ public class MainMenu extends JFrame {
 
 	// Main method to run the program
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> new MainMenu());
+		SwingUtilities.invokeLater(() -> {
+			MainMenu mainMenu = new MainMenu();
+			// Simulate adding some scores for testing
+			mainMenu.simulateAddHighScore("Alice", 1200);
+			mainMenu.simulateAddHighScore("Bob", 800);
+			mainMenu.simulateAddHighScore("Charlie", 1500);
+		});
 	}
 }
