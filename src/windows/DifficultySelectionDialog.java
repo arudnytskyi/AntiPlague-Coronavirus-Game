@@ -34,31 +34,13 @@ public class DifficultySelectionDialog extends JDialog {
 		add(panel);
 
 		// Button listeners
-		easyButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				startGame("Easy");
-			}
-		});
-
-		mediumButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				startGame("Medium");
-			}
-		});
-
-		hardButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				startGame("Hard");
-			}
-		});
+		easyButton.addActionListener(e -> startGame("Easy"));
+		mediumButton.addActionListener(e -> startGame("Medium"));
+		hardButton.addActionListener(e -> startGame("Hard"));
 	}
 
 	private void startGame(String difficulty) {
-		JOptionPane.showMessageDialog(this, "Starting game on " + difficulty + " difficulty!", "Game Start", JOptionPane.INFORMATION_MESSAGE);
 		dispose();
-		// Logic for launching the game can be added here
+		new GameWindow(difficulty); // Pass difficulty to the game window
 	}
 }
