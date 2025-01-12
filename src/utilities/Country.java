@@ -6,14 +6,16 @@ import java.awt.*;
 public class Country {
 	private String name;
 	private int x, y;
+	private String continent;
 	private boolean infected = false;
 	private JButton button;
 	private double infectionRate;
 
-	public Country(String name, int x, int y, double infectionRate) {
+	public Country(String name, int x, int y, String continent, double infectionRate) {
 		this.name = name;
 		this.x = x;
 		this.y = y;
+		this.continent = continent;
 		this.infectionRate = infectionRate;
 
 		// Create a button to represent the country
@@ -68,5 +70,9 @@ public class Country {
 
 	public int getY() {
 		return y;
+	}
+
+	public String getContinent() {
+		return continent;
 	}
 }

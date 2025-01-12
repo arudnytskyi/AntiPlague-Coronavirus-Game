@@ -12,15 +12,16 @@ import java.util.List;
 public class GameWindow extends JFrame {
 	private List<Country> countries;
 	private List<Transport> transports;
+	private List<Upgrade> upgrades;
 	private JPanel mapPanel;
 	private JLabel scoreLabel;
 	private JLabel timerLabel;
 	private int score = 0;
 	private int timeElapsed = 0;
 	private Timer timer;
+	private Timer randomTransportTimer;
 	private String difficulty;
 	private double infectionRate;
-	private List<Upgrade> upgrades; // Declare the upgrades variable
 
 	public GameWindow(String difficulty) {
 		this.difficulty = difficulty;
@@ -38,9 +39,6 @@ public class GameWindow extends JFrame {
 				break;
 		}
 
-		// Initialize the upgrades list
-		upgrades = initializeUpgrades();
-
 		// Set up the frame
 		setTitle("AntiPlague Game - " + difficulty + " Mode");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,15 +51,19 @@ public class GameWindow extends JFrame {
 
 		// Top panel for score and timer
 		JPanel topPanel = new JPanel(new GridLayout(1, 3));
+
 		scoreLabel = new JLabel("Score: 0");
+		scoreLabel.setFont(new Font("Arial", Font.BOLD, 16));
+		topPanel.add(scoreLabel);
+
 		timerLabel = new JLabel("Time: 0s");
+		timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+		topPanel.add(timerLabel);
+
 		JButton upgradeButton = new JButton("Upgrades");
 		upgradeButton.addActionListener(e -> openUpgradeStore());
-		scoreLabel.setFont(new Font("Arial", Font.BOLD, 16));
-		timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
-		topPanel.add(scoreLabel);
-		topPanel.add(timerLabel);
 		topPanel.add(upgradeButton);
+
 		panel.add(topPanel, BorderLayout.NORTH);
 
 		// Map panel
@@ -70,6 +72,7 @@ public class GameWindow extends JFrame {
 		panel.add(mapPanel, BorderLayout.CENTER);
 
 		// Initialize countries and add them to the map
+		upgrades = initializeUpgrades();
 		countries = initializeCountries(mapPanel);
 		transports = initializeTransports(mapPanel);
 
@@ -128,14 +131,29 @@ public class GameWindow extends JFrame {
 
 	private List<Country> initializeCountries(JPanel mapPanel) {
 		List<Country> countryList = new ArrayList<>();
-		String[] countryNames = {"USA", "Canada", "Mexico", "Brazil", "UK", "France", "Germany", "India", "China", "Australia"};
-		int[][] positions = {
-				{100, 100}, {200, 50}, {150, 200}, {250, 300}, {500, 50},
-				{550, 100}, {600, 150}, {700, 300}, {750, 200}, {800, 400}
+
+		// Countries with their coordinates and continent assignments
+		Object[][] countryData = {
+				{"USA", 100, 100, "North America"},
+				{"Canada", 200, 50, "North America"},
+				{"Mexico", 150, 200, "North America"},
+				{"Brazil", 250, 300, "South America"},
+				{"UK", 500, 50, "Europe"},
+				{"France", 550, 100, "Europe"},
+				{"Germany", 600, 150, "Europe"},
+				{"India", 700, 300, "Asia"},
+				{"China", 750, 200, "Asia"},
+				{"Australia", 800, 400, "Australia"}
 		};
 
-		for (int i = 0; i < countryNames.length; i++) {
-			Country country = new Country(countryNames[i], positions[i][0], positions[i][1], 0.1);
+		for (Object[] data : countryData) {
+			String name = (String) data[0];
+			int x = (int) data[1];
+			int y = (int) data[2];
+			String continent = (String) data[3];
+			double infectionRate = 0.1; // Default infection rate for all countries
+
+			Country country = new Country(name, x, y, continent, infectionRate);
 			country.addToPanel(mapPanel);
 			countryList.add(country);
 		}
@@ -146,18 +164,39 @@ public class GameWindow extends JFrame {
 	private List<Transport> initializeTransports(JPanel mapPanel) {
 		List<Transport> transportList = new ArrayList<>();
 
-		// Create transport connections
-		transportList.add(new Transport("Airline", countries.get(0), countries.get(4), mapPanel)); // USA to UK
-		transportList.add(new Transport("Ship", countries.get(3), countries.get(7), mapPanel));   // Brazil to India
-		transportList.add(new Transport("Train", countries.get(1), countries.get(2), mapPanel));  // Canada to Mexico
+		for (int i = 0; i < countries.size(); i++) {
+			for (int j = 0; j < countries.size(); j++) {
+				if (i == j) continue;
+
+				Country origin = countries.get(i);
+				Country destination = countries.get(j);
+
+				// Plain: Allowed between any two countries
+				transportList.add(new Transport("Airline", origin, destination, mapPanel));
+
+				// Train: Only if in the same continent
+				if (origin.getContinent().equals(destination.getContinent())) {
+					transportList.add(new Transport("Train", origin, destination, mapPanel));
+				}
+
+				// Ship: Only if in different continents
+				if (!origin.getContinent().equals(destination.getContinent())) {
+					transportList.add(new Transport("Ship", origin, destination, mapPanel));
+				}
+			}
+		}
 
 		return transportList;
 	}
 
 	private void startTransportAnimations() {
-		for (Transport transport : transports) {
-			transport.startTransport();
-		}
+		randomTransportTimer = new Timer(5000, e -> {
+			if (!transports.isEmpty()) {
+				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
+				randomTransport.startTransport();
+			}
+		});
+		randomTransportTimer.start();
 	}
 
 	private void updateTimer() {
