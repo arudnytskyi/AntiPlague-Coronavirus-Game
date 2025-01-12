@@ -1,8 +1,6 @@
 package windows;
 
-import utilities.Country;
-import utilities.Upgrade;
-import utilities.UpgradeStoreDialog;
+import utilities.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +11,8 @@ import java.util.List;
 
 public class GameWindow extends JFrame {
 	private List<Country> countries;
+	private List<Transport> transports;
+	private JPanel mapPanel;
 	private JLabel scoreLabel;
 	private JLabel timerLabel;
 	private int score = 0;
@@ -65,12 +65,16 @@ public class GameWindow extends JFrame {
 		panel.add(topPanel, BorderLayout.NORTH);
 
 		// Map panel
-		JPanel mapPanel = new JPanel();
+		mapPanel = new JPanel();
 		mapPanel.setLayout(null);
 		panel.add(mapPanel, BorderLayout.CENTER);
 
 		// Initialize countries and add them to the map
 		countries = initializeCountries(mapPanel);
+		transports = initializeTransports(mapPanel);
+
+		// Start transport animations
+		startTransportAnimations();
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
@@ -124,20 +128,36 @@ public class GameWindow extends JFrame {
 
 	private List<Country> initializeCountries(JPanel mapPanel) {
 		List<Country> countryList = new ArrayList<>();
-		// Define countries and their positions
 		String[] countryNames = {"USA", "Canada", "Mexico", "Brazil", "UK", "France", "Germany", "India", "China", "Australia"};
 		int[][] positions = {
-				{100, 100}, {150, 50}, {100, 200}, {200, 300}, {400, 50},
-				{450, 100}, {500, 150}, {600, 300}, {700, 200}, {750, 400}
+				{100, 100}, {200, 50}, {150, 200}, {250, 300}, {500, 50},
+				{550, 100}, {600, 150}, {700, 300}, {750, 200}, {800, 400}
 		};
 
 		for (int i = 0; i < countryNames.length; i++) {
-			Country country = new Country(countryNames[i], positions[i][0], positions[i][1], infectionRate);
+			Country country = new Country(countryNames[i], positions[i][0], positions[i][1], 0.1);
 			country.addToPanel(mapPanel);
 			countryList.add(country);
 		}
 
 		return countryList;
+	}
+
+	private List<Transport> initializeTransports(JPanel mapPanel) {
+		List<Transport> transportList = new ArrayList<>();
+
+		// Create transport connections
+		transportList.add(new Transport("Airline", countries.get(0), countries.get(4), mapPanel)); // USA to UK
+		transportList.add(new Transport("Ship", countries.get(3), countries.get(7), mapPanel));   // Brazil to India
+		transportList.add(new Transport("Train", countries.get(1), countries.get(2), mapPanel));  // Canada to Mexico
+
+		return transportList;
+	}
+
+	private void startTransportAnimations() {
+		for (Transport transport : transports) {
+			transport.startTransport();
+		}
 	}
 
 	private void updateTimer() {

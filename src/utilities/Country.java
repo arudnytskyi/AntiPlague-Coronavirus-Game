@@ -53,7 +53,20 @@ public class Country {
 		return infected;
 	}
 
+	public void setInfected(boolean infected) {
+		this.infected = infected;
+		updateButtonAppearance();
+	}
+
 	public String getName() {
 		return name;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
 	}
 }
