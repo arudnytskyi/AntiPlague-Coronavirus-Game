@@ -77,7 +77,7 @@ public class GameWindow extends JFrame {
 		transports = initializeTransports(mapPanel);
 
 		// Start
-		infectRandomCountry();
+		promptForFirstInfectedCountry();
 		startRandomTransport();
 
 		// Control panel with pause and quit buttons
@@ -201,18 +201,36 @@ public class GameWindow extends JFrame {
 		randomTransportTimer.start();
 	}
 
-	private void infectRandomCountry() {
-		int randomIndex = (int) (Math.random() * countries.size());
-		Country randomCountry = countries.get(randomIndex);
-		randomCountry.setInfected(true);
-		randomCountry.updateInfection();
+	private void promptForFirstInfectedCountry() {
 		JOptionPane.showMessageDialog(
 				this,
-				"The infection has started in " + randomCountry.getName() + "!\n" +
-						"Initial Infected: 1/" + randomCountry.getPopulation(),
-				"Initial Infection",
-				JOptionPane.WARNING_MESSAGE
+				"Please select the first infected country by clicking on the map.",
+				"Select Initial Infection",
+				JOptionPane.INFORMATION_MESSAGE
 		);
+
+		for (Country country : countries) {
+			country.setSelectable(true);
+		}
+
+		// Use a background thread to wait until a country is infected
+		new Thread(() -> {
+			boolean countrySelected = false;
+			while (!countrySelected) {
+				for (Country country : countries) {
+					if (country.isInfected()) {
+						countrySelected = true;
+						break;
+					}
+				}
+			}
+
+			// Start the game logic after selection
+			SwingUtilities.invokeLater(() -> {
+				startRandomTransport();
+				timer.start();
+			});
+		}).start();
 	}
 
 	private void updateTimer() {

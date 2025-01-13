@@ -8,6 +8,7 @@ public class Country {
 	private int x, y;
 	private String continent;
 	private boolean infected = false; // Whether the country has any infection
+	private boolean selectable = false;
 	private JButton button;
 	private double infectionRate; // Rate of infection spread within the country
 	private int population;
@@ -34,10 +35,29 @@ public class Country {
 	}
 
 	private void interact() {
-		String message = infected
-				? name + " is infected! Infected Population: " + infectedPopulation + "/" + population
-				: name + " is safe. Population: " + population;
-		JOptionPane.showMessageDialog(null, message, "Country Status", JOptionPane.INFORMATION_MESSAGE);
+		if (selectable) {
+			int confirm = JOptionPane.showConfirmDialog(
+					null,
+					"Set " + name + " as the first infected country?",
+					"Confirm Selection",
+					JOptionPane.YES_NO_OPTION
+			);
+			if (confirm == JOptionPane.YES_OPTION) {
+				setInfected(true);
+				selectable = false; // Lock selection
+				JOptionPane.showMessageDialog(
+						null,
+						name + " is now infected. Initial infected: 1/" + population,
+						"Infection Started",
+						JOptionPane.INFORMATION_MESSAGE
+				);
+			}
+		} else {
+			String message = infected
+					? name + " is infected! Infected Population: " + infectedPopulation + "/" + population
+					: name + " is safe. Population: " + population;
+			JOptionPane.showMessageDialog(null, message, "Country Status", JOptionPane.INFORMATION_MESSAGE);
+		}
 	}
 
 	public void updateInfection() {
@@ -84,6 +104,11 @@ public class Country {
 			infectedPopulation = 1; // Start with at least one infected individual
 		}
 		updateButtonAppearance();
+	}
+
+	public void setSelectable(boolean selectable) {
+		this.selectable = selectable;
+		updateButtonAppearance(); // Update button visuals if needed
 	}
 
 	public double getInfectionRate() {
