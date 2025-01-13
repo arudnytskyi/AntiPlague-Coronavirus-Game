@@ -120,6 +120,12 @@ public class Transport {
 	private void spreadInfection() {
 		if (origin.isInfected() && !destination.isInfected()) {
 			destination.setInfected(true);
+			JOptionPane.showMessageDialog(
+					null,
+					"Infection spread to " + destination.getName() + " via " + type,
+					"Infection Update",
+					JOptionPane.WARNING_MESSAGE
+			);
 		}
 	}
 }

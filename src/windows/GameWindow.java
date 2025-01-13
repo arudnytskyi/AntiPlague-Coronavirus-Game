@@ -76,8 +76,9 @@ public class GameWindow extends JFrame {
 		countries = initializeCountries(mapPanel);
 		transports = initializeTransports(mapPanel);
 
-		// Start transport animations
-		startTransportAnimations();
+		// Start
+		infectRandomCountry();
+		startRandomTransport();
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
@@ -189,7 +190,7 @@ public class GameWindow extends JFrame {
 		return transportList;
 	}
 
-	private void startTransportAnimations() {
+	private void startRandomTransport() {
 		randomTransportTimer = new Timer(5000, e -> {
 			if (!transports.isEmpty()) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
@@ -199,6 +200,18 @@ public class GameWindow extends JFrame {
 		randomTransportTimer.start();
 	}
 
+	private void infectRandomCountry() {
+		int randomIndex = (int) (Math.random() * countries.size());
+		Country randomCountry = countries.get(randomIndex);
+		randomCountry.setInfected(true);
+		JOptionPane.showMessageDialog(
+				this,
+				"The infection has started in " + randomCountry.getName() + "!",
+				"Initial Infection",
+				JOptionPane.WARNING_MESSAGE
+		);
+	}
+
 	private void updateTimer() {
 		timeElapsed++;
 		timerLabel.setText("Time: " + timeElapsed + "s");
@@ -206,10 +219,6 @@ public class GameWindow extends JFrame {
 	}
 
 	private void updateGameLogic() {
-		for (Country country : countries) {
-			country.updateInfection();
-		}
-
 		// Update the score based on the number of uninfected countries
 		score = calculateScore();
 		scoreLabel.setText("Score: " + score);
