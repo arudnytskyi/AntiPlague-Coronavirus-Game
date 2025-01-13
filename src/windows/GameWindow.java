@@ -16,10 +16,13 @@ public class GameWindow extends JFrame {
 	private JPanel mapPanel;
 	private JLabel scoreLabel;
 	private JLabel timerLabel;
+	private JProgressBar vaccineProgressBar;
 	private int score = 0;
 	private int timeElapsed = 0;
 	private Timer timer;
 	private Timer randomTransportTimer;
+	private Timer labTimer;
+	private Timer infectionRateTimer;
 	private String difficulty;
 	private double infectionRate;
 
@@ -50,7 +53,7 @@ public class GameWindow extends JFrame {
 		JPanel panel = new JPanel(new BorderLayout());
 
 		// Top panel for score and timer
-		JPanel topPanel = new JPanel(new GridLayout(1, 3));
+		JPanel topPanel = new JPanel(new GridLayout(1, 4));
 
 		scoreLabel = new JLabel("Score: 0");
 		scoreLabel.setFont(new Font("Arial", Font.BOLD, 16));
@@ -59,6 +62,12 @@ public class GameWindow extends JFrame {
 		timerLabel = new JLabel("Time: 0s");
 		timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
 		topPanel.add(timerLabel);
+
+		vaccineProgressBar = new JProgressBar(0, 100); // Progress from 0 to 100
+		vaccineProgressBar.setValue(0); // Initial value
+		vaccineProgressBar.setStringPainted(true);
+		vaccineProgressBar.setFont(new Font("Arial", Font.BOLD, 12));
+		topPanel.add(vaccineProgressBar);
 
 		JButton upgradeButton = new JButton("Upgrades");
 		upgradeButton.addActionListener(e -> openUpgradeStore());
@@ -79,6 +88,7 @@ public class GameWindow extends JFrame {
 		// Start
 		promptForFirstInfectedCountry();
 		startRandomTransport();
+		startInfectionRateIncrease();
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
@@ -108,20 +118,40 @@ public class GameWindow extends JFrame {
 
 	private List<Upgrade> initializeUpgrades() {
 		List<Upgrade> upgradeList = new ArrayList<>();
+
+		// Vaccine Development Upgrade
+		upgradeList.add(new Upgrade("Vaccine Research", 50, "Adds +5% to vaccine development.", () -> {
+			int currentProgress = vaccineProgressBar.getValue();
+			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100)); // Add 5% progress, max 100%
+			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%!");
+		}));
+
+		// Laboratory Upgrade
+		upgradeList.add(new Upgrade("Build Laboratory", 100, "Adds a laboratory that increases vaccine progress over time.", () -> {
+			startLaboratoryProgress();
+			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
+		}));
+
+		// Add existing upgrades (e.g., quarantine, vaccination)
 		upgradeList.add(new Upgrade("Quarantine", 50, "Reduce infection rate in one country.", () -> {
 			infectionRate -= 0.01; // Reduce infection rate globally
 			JOptionPane.showMessageDialog(this, "Infection rate reduced globally!");
 		}));
-		upgradeList.add(new Upgrade("Vaccination", 100, "Prevent infection in one country.", () -> {
-			for (Country country : countries) {
-				if (!country.isInfected()) {
-					JOptionPane.showMessageDialog(this, country.getName() + " vaccinated!");
-					break;
-				}
+
+		upgradeList.add(new Upgrade("Cancel Mutation", 75, "Decreases the infection rate by 0.01 (1%).", () -> {
+			if (infectionRate > 0.01) {
+				infectionRate -= 0.01; // Reduce infection rate by 1%
+				JOptionPane.showMessageDialog(this, "Mutation canceled! Infection rate decreased by 1%.",
+						"Upgrade Successful", JOptionPane.INFORMATION_MESSAGE);
+			} else {
+				JOptionPane.showMessageDialog(this, "Infection rate is already at the minimum!",
+						"Upgrade Failed", JOptionPane.WARNING_MESSAGE);
 			}
 		}));
+
 		return upgradeList;
 	}
+
 
 	private void openUpgradeStore() {
 		UpgradeStoreDialog store = new UpgradeStoreDialog(this, upgrades, score);
@@ -248,6 +278,29 @@ public class GameWindow extends JFrame {
 				});
 			}).start();
 		});
+	}
+
+	private void startInfectionRateIncrease() {
+		infectionRateTimer = new Timer(30000, e -> {
+			infectionRate += 0.01; // Increase infection rate by 0.01 (1%)
+			JOptionPane.showMessageDialog(this, "The virus has mutated! Infection rate increased.",
+					"Mutation Alert", JOptionPane.WARNING_MESSAGE);
+		});
+		infectionRateTimer.start();
+	}
+
+	private void startLaboratoryProgress() {
+		if (labTimer == null) {
+			labTimer = new Timer(7000, e -> {
+				int currentProgress = vaccineProgressBar.getValue();
+				if (currentProgress < 100) {
+					vaccineProgressBar.setValue(Math.min(currentProgress + 1, 100)); // Add 1% progress every 2 seconds
+				} else {
+					labTimer.stop();
+				}
+			});
+			labTimer.start();
+		}
 	}
 
 	private void updateTimer() {
