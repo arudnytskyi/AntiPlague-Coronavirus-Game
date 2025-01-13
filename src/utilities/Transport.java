@@ -17,7 +17,8 @@ public class Transport {
 	private double stepX, stepY;
 
 	private static final int ICON_SIZE = 30; // Desired icon size (width and height)
-	private ImageIcon originalIcon;
+	private ImageIcon normalIcon;
+	private ImageIcon infectedIcon;
 
 	public Transport(String type, Country origin, Country destination, JPanel mapPanel) {
 		this.type = type;
@@ -26,8 +27,9 @@ public class Transport {
 		this.mapPanel = mapPanel;
 
 		// Load and scale the original icon
-		originalIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + ".png"), ICON_SIZE, ICON_SIZE);
-		transportIcon = new JLabel(originalIcon);
+		normalIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + ".png"), ICON_SIZE, ICON_SIZE);
+		infectedIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_infected.png"), ICON_SIZE, ICON_SIZE);
+		transportIcon = new JLabel(normalIcon);
 		transportIcon.setBounds(origin.getX(), origin.getY(), ICON_SIZE, ICON_SIZE);
 		transportIcon.setVisible(false); // Initially hidden
 		mapPanel.add(transportIcon);
@@ -75,20 +77,25 @@ public class Transport {
 		stepX = (double) dx / totalSteps;
 		stepY = (double) dy / totalSteps;
 
+		// Determine if the transport is infected
+		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getPopulation();
+		boolean isInfected = Math.random() < infectionProbability;
+
 		// Calculate angle for rotation (in radians)
 		double angle = Math.atan2(dy, dx);
 
-		// Set rotated icon and initial position
-		transportIcon.setIcon(rotateIcon(originalIcon, angle));
+
+		// Set initial position and visibility
+		transportIcon.setIcon(rotateIcon(isInfected ? infectedIcon : normalIcon, angle));
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		transportIcon.setVisible(true);
 
 		// Start the animation timer
-		animationTimer = new Timer(10, e -> animateTransport());
+		animationTimer = new Timer(10, e -> animateTransport(isInfected));
 		animationTimer.start();
 	}
 
-	private void animateTransport() {
+	private void animateTransport(boolean isInfected) {
 		currentStep++;
 		int newX = (int) (origin.getX() + stepX * currentStep);
 		int newY = (int) (origin.getY() + stepY * currentStep);
@@ -98,31 +105,50 @@ public class Transport {
 		mapPanel.repaint();
 
 		if (currentStep >= totalSteps) {
-			stopAnimation();
+			stopAnimation(isInfected);
 		}
 	}
 
-	private void stopAnimation() {
+	private void stopAnimation(boolean isInfected) {
 		if (animationTimer != null) {
 			animationTimer.stop();
 			animationTimer = null;
 		}
 
-		transportIcon.setLocation(destination.getX(), destination.getY());
 		transportIcon.setVisible(false);
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		mapPanel.revalidate();
 		mapPanel.repaint();
 
-		spreadInfection();
+		if (isInfected) {
+			spreadInfection();
+		}
+	}
+
+	public void stopAnimationManually() {
+		if (animationTimer != null) {
+			animationTimer.stop();
+			animationTimer = null;
+		}
+
+		// Hide the transport icon and reset its position
+		transportIcon.setVisible(false);
+		transportIcon.setLocation(origin.getX(), origin.getY());
+		mapPanel.revalidate();
+		mapPanel.repaint();
 	}
 
 	private void spreadInfection() {
 		if (origin.isInfected() && !destination.isInfected()) {
-			destination.setInfected(true);
+			Country destinationCountry = destination;
+
+			destinationCountry.setInfected(true); // Mark destination as infected
+			destinationCountry.updateInfection(); // Apply new infections incrementally
+
 			JOptionPane.showMessageDialog(
 					null,
-					"Infection spread to " + destination.getName() + " via " + type,
+					"Infected transport has spread the infection to " + destinationCountry.getName() + "!\n" +
+							"Total Infected: " + destinationCountry.getInfectedPopulation() + "/" + destinationCountry.getPopulation(),
 					"Infection Update",
 					JOptionPane.WARNING_MESSAGE
 			);

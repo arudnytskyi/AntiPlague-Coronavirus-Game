@@ -133,18 +133,18 @@ public class GameWindow extends JFrame {
 	private List<Country> initializeCountries(JPanel mapPanel) {
 		List<Country> countryList = new ArrayList<>();
 
-		// Countries with their coordinates and continent assignments
+		// Countries with their coordinates, continent assignments, infection rate, and population
 		Object[][] countryData = {
-				{"USA", 100, 100, "North America"},
-				{"Canada", 200, 50, "North America"},
-				{"Mexico", 150, 200, "North America"},
-				{"Brazil", 250, 300, "South America"},
-				{"UK", 500, 50, "Europe"},
-				{"France", 550, 100, "Europe"},
-				{"Germany", 600, 150, "Europe"},
-				{"India", 700, 300, "Asia"},
-				{"China", 750, 200, "Asia"},
-				{"Australia", 800, 400, "Australia"}
+				{"USA", 100, 100, "North America", 0.1, 331000000},
+				{"Canada", 200, 50, "North America", 0.08, 38000000},
+				{"Mexico", 150, 200, "North America", 0.09, 126000000},
+				{"Brazil", 250, 300, "South America", 0.12, 213000000},
+				{"UK", 500, 50, "Europe", 0.1, 68000000},
+				{"France", 550, 100, "Europe", 0.1, 65000000},
+				{"Germany", 600, 150, "Europe", 0.1, 83000000},
+				{"India", 700, 300, "Asia", 0.15, 1390000000},
+				{"China", 750, 200, "Asia", 0.15, 1440000000},
+				{"Australia", 800, 400, "Australia", 0.1, 26000000}
 		};
 
 		for (Object[] data : countryData) {
@@ -152,9 +152,10 @@ public class GameWindow extends JFrame {
 			int x = (int) data[1];
 			int y = (int) data[2];
 			String continent = (String) data[3];
-			double infectionRate = 0.1; // Default infection rate for all countries
+			double infectionRate = (double) data[4];
+			int population = (int) data[5];
 
-			Country country = new Country(name, x, y, continent, infectionRate);
+			Country country = new Country(name, x, y, continent, infectionRate, population);
 			country.addToPanel(mapPanel);
 			countryList.add(country);
 		}
@@ -204,9 +205,11 @@ public class GameWindow extends JFrame {
 		int randomIndex = (int) (Math.random() * countries.size());
 		Country randomCountry = countries.get(randomIndex);
 		randomCountry.setInfected(true);
+		randomCountry.updateInfection();
 		JOptionPane.showMessageDialog(
 				this,
-				"The infection has started in " + randomCountry.getName() + "!",
+				"The infection has started in " + randomCountry.getName() + "!\n" +
+						"Initial Infected: 1/" + randomCountry.getPopulation(),
 				"Initial Infection",
 				JOptionPane.WARNING_MESSAGE
 		);
@@ -219,11 +222,16 @@ public class GameWindow extends JFrame {
 	}
 
 	private void updateGameLogic() {
-		// Update the score based on the number of uninfected countries
+		for (Country country : countries) {
+			if (country.isInfected()) {
+				country.updateInfection(); // Dynamically update infection within the country
+			}
+		}
+
+		// Update the score and check for game over
 		score = calculateScore();
 		scoreLabel.setText("Score: " + score);
 
-		// Check if the game is over
 		if (isGameOver()) {
 			endGame();
 		}
@@ -249,7 +257,21 @@ public class GameWindow extends JFrame {
 	}
 
 	private void endGame() {
-		timer.stop();
+		// Stop the main game timer
+		if (timer != null) {
+			timer.stop();
+		}
+
+		// Stop the transport animation timer
+		if (randomTransportTimer != null) {
+			randomTransportTimer.stop();
+		}
+
+		// Stop all animations in transports
+		for (Transport transport : transports) {
+			transport.stopAnimationManually(); // Implement this in the Transport class
+		}
+
 		JOptionPane.showMessageDialog(this, "Game Over! Your Score: " + score, "Game Over", JOptionPane.INFORMATION_MESSAGE);
 		dispose();
 	}
