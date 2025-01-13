@@ -202,35 +202,52 @@ public class GameWindow extends JFrame {
 	}
 
 	private void promptForFirstInfectedCountry() {
-		JOptionPane.showMessageDialog(
-				this,
-				"Please select the first infected country by clicking on the map.",
-				"Select Initial Infection",
-				JOptionPane.INFORMATION_MESSAGE
-		);
+		SwingUtilities.invokeLater(() -> {
+			JOptionPane.showMessageDialog(
+					this,
+					"Please select the first infected country by clicking on the map.",
+					"Initial Infection Selection",
+					JOptionPane.INFORMATION_MESSAGE
+			);
 
-		for (Country country : countries) {
-			country.setSelectable(true);
-		}
-
-		// Use a background thread to wait until a country is infected
-		new Thread(() -> {
-			boolean countrySelected = false;
-			while (!countrySelected) {
-				for (Country country : countries) {
-					if (country.isInfected()) {
-						countrySelected = true;
-						break;
-					}
-				}
+			// Allow selection for all countries
+			for (Country country : countries) {
+				country.setSelectable(true);
 			}
 
-			// Start the game logic after selection
-			SwingUtilities.invokeLater(() -> {
-				startRandomTransport();
-				timer.start();
-			});
-		}).start();
+			// Start a background thread to wait for selection
+			new Thread(() -> {
+				boolean countrySelected = false;
+				while (!countrySelected) {
+					for (Country country : countries) {
+						if (country.isInfected()) {
+							countrySelected = true;
+							break;
+						}
+					}
+					try {
+						Thread.sleep(100); // Polling delay
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+				// Once a country is selected, continue the game
+				SwingUtilities.invokeLater(() -> {
+					for (Country country : countries) {
+						country.setSelectable(false); // Disable further selection
+					}
+					startRandomTransport();
+					timer.start();
+					JOptionPane.showMessageDialog(
+							this,
+							"The infection has started! Protect the world from further spread.",
+							"Game Start",
+							JOptionPane.INFORMATION_MESSAGE
+					);
+				});
+			}).start();
+		});
 	}
 
 	private void updateTimer() {
