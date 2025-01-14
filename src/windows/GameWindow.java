@@ -13,7 +13,9 @@ public class GameWindow extends JFrame {
 	private List<Country> countries;
 	private List<Transport> transports;
 	private List<Upgrade> upgrades;
+	private List<JButton> activeIcons;
 	private JPanel mapPanel;
+	private JLayeredPane layeredPane;
 	private JLabel scoreLabel;
 	private JLabel timerLabel;
 	private JProgressBar vaccineProgressBar;
@@ -24,9 +26,11 @@ public class GameWindow extends JFrame {
 	private Timer labTimer;
 	private Timer infectionRateTimer;
 	private Timer globalAwarenessTimer;
+	private Timer iconSpawnerTimer;
 	private String difficulty;
 	private double infectionRate;
 	private static int globalAwareness = 0;
+	private boolean isInfectionStarted = false;
 
 	public GameWindow(String difficulty) {
 		this.difficulty = difficulty;
@@ -77,9 +81,12 @@ public class GameWindow extends JFrame {
 
 		panel.add(topPanel, BorderLayout.NORTH);
 
-		// Map panel
-		mapPanel = new JPanel();
-		mapPanel.setLayout(null);
+		// Map panel with layered pane
+		mapPanel = new JPanel(null);
+		layeredPane = new JLayeredPane();
+		layeredPane.setLayout(null);
+		layeredPane.setBounds(0, 0, 800, 500);
+		mapPanel.add(layeredPane);
 		panel.add(mapPanel, BorderLayout.CENTER);
 
 		// Initialize countries and add them to the map
@@ -87,10 +94,12 @@ public class GameWindow extends JFrame {
 		countries = initializeCountries(mapPanel);
 		transports = initializeTransports(mapPanel);
 
+		activeIcons = new ArrayList<>();
+
 		// Start
+		setupMainTimer();
 		promptForFirstInfectedCountry();
 		startRandomTransport();
-		startInfectionRateIncrease();
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
@@ -102,10 +111,6 @@ public class GameWindow extends JFrame {
 
 		// Add panel to frame
 		add(panel);
-
-		// Timer for game logic
-		timer = new Timer(1000, e -> updateTimer());
-		timer.start();
 
 		globalAwarenessTimer = new Timer(5000, e -> updateGlobalAwareness()); // Update every 5 seconds
 		globalAwarenessTimer.start();
@@ -316,7 +321,10 @@ public class GameWindow extends JFrame {
 					for (Country country : countries) {
 						country.setSelectable(false); // Disable further selection
 					}
-					startRandomTransport();
+					isInfectionStarted = true;
+					startMainTimer();
+					startIconSpawner();
+					startInfectionRateIncrease();
 					timer.start();
 					JOptionPane.showMessageDialog(
 							this,
@@ -351,6 +359,69 @@ public class GameWindow extends JFrame {
 			labTimer.start();
 		}
 	}
+
+	private void startIconSpawner() {
+		iconSpawnerTimer = new Timer(12000, e -> {
+			if (!isInfectionStarted || countries.isEmpty()) return;
+
+			// Choose a random country
+			Country randomCountry = countries.get((int) (Math.random() * countries.size()));
+			spawnPointIcon(randomCountry);
+		});
+		iconSpawnerTimer.start(); // Start the timer when infection begins
+	}
+
+	private void spawnPointIcon(Country country) {
+		JButton icon = new JButton(); // Create a button for the icon
+		int offsetX = (int) (Math.random() * 50 - 25); // Random offset
+		int offsetY = (int) (Math.random() * 50 - 25);
+		int iconSize = 25;
+
+		// Set position and size
+		icon.setBounds(country.getX() + offsetX, country.getY() + offsetY, iconSize, iconSize);
+
+		// Determine points and set text
+		boolean isInfected = country.isInfected();
+		int pointsEarned = isInfected ? 5 : 10;
+		String iconText = "+" + pointsEarned;
+		icon.setText(iconText);
+
+		// Set color based on infection status
+		icon.setBackground(isInfected ? Color.YELLOW : Color.BLUE);
+		icon.setForeground(isInfected ? Color.BLACK : Color.WHITE); // Text color
+		icon.setFont(new Font("Arial", Font.BOLD, 10)); // Readable font
+		icon.setOpaque(true);
+		icon.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+		// Add to layered pane
+		layeredPane.add(icon, JLayeredPane.POPUP_LAYER);
+		layeredPane.revalidate();
+		layeredPane.repaint();
+		activeIcons.add(icon);
+
+		// Add click listener
+		icon.addActionListener(e -> {
+			score += pointsEarned; // Increment the score
+			scoreLabel.setText("Score: " + score); // Update score display
+
+			// Remove the icon
+			layeredPane.remove(icon);
+			layeredPane.revalidate();
+			layeredPane.repaint();
+			activeIcons.remove(icon);
+		});
+
+		// Remove icon after 10 seconds if not clicked
+		Timer removeTimer = new Timer(10000, ev -> {
+			layeredPane.remove(icon);
+			layeredPane.revalidate();
+			layeredPane.repaint();
+			activeIcons.remove(icon);
+		});
+		removeTimer.setRepeats(false);
+		removeTimer.start();
+	}
+
 
 	public static int getGlobalAwareness() {
 		return globalAwareness;
@@ -390,23 +461,9 @@ public class GameWindow extends JFrame {
 		// Update global awareness after infection updates
 		updateGlobalAwareness();
 
-		// Update the score and check for game over
-		score = calculateScore();
-		scoreLabel.setText("Score: " + score);
-
 		if (isGameOver()) {
 			endGame();
 		}
-	}
-
-	private int calculateScore() {
-		int uninfectedCount = 0;
-		for (Country country : countries) {
-			if (!country.isInfected()) {
-				uninfectedCount++;
-			}
-		}
-		return uninfectedCount * 10; // 10 points per uninfected country
 	}
 
 	private boolean isGameOver() {
@@ -462,6 +519,20 @@ public class GameWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				quitGame();
 			}
+		});
+	}
+
+	private void startMainTimer() {
+		if (timer != null && isInfectionStarted) {
+			timer.start();
+		}
+	}
+
+	private void setupMainTimer() {
+		timer = new Timer(1000, e -> {
+			timeElapsed++;
+			timerLabel.setText("Time: " + timeElapsed + "s");
+			updateGameLogic();
 		});
 	}
 
