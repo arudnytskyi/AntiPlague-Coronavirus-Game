@@ -1,5 +1,7 @@
 package utilities;
 
+import windows.GameWindow;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -15,10 +17,12 @@ public class Transport {
 	private int totalSteps;
 	private int currentStep;
 	private double stepX, stepY;
-
 	private static final int ICON_SIZE = 30; // Desired icon size (width and height)
 	private ImageIcon normalIcon;
 	private ImageIcon infectedIcon;
+	private static double sanitationEffect = 1.0;
+	private static boolean rapidTestingEnabled = false;
+	private static boolean vaccinePriority = false;
 
 	public Transport(String type, Country origin, Country destination, JPanel mapPanel) {
 		this.type = type;
@@ -78,7 +82,7 @@ public class Transport {
 		stepY = (double) dy / totalSteps;
 
 		// Determine if the transport is infected
-		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getPopulation();
+		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getPopulation() * sanitationEffect;;
 		boolean isInfected = Math.random() < infectionProbability;
 
 		// Calculate angle for rotation (in radians)
@@ -107,6 +111,40 @@ public class Transport {
 		if (currentStep >= totalSteps) {
 			stopAnimation(isInfected);
 		}
+	}
+
+	public boolean isRouteOperational() {
+		if (GameWindow.getGlobalAwareness() >= 70) {
+			if (!vaccinePriority) {
+				return false; // All routes are closed unless vaccine priority is enabled
+			}
+		}
+
+		double originInfection = (double) origin.getInfectedPopulation() / origin.getPopulation();
+		double destinationInfection = (double) destination.getInfectedPopulation() / destination.getPopulation();
+
+		if (vaccinePriority) {
+			return true;
+		}
+
+		// Infection Level Restriction with Rapid Testing
+		if (type.equals("Airline") && (originInfection > 0.2 || destinationInfection > 0.2)) {
+			if (rapidTestingEnabled) {
+				return originInfection <= 0.25 && destinationInfection <= 0.25; // Relaxed condition for reopening
+			}
+			return false;
+		}
+
+		// Population Density Restriction
+		if (type.equals("Train") && (origin.getPopulationDensity() > 500 || destination.getPopulationDensity() > 500)) return false;
+
+		// Proximity Restriction
+		if (type.equals("Bus") && !origin.getContinent().equals(destination.getContinent())) return false;
+
+		// Global Awareness Restriction
+		if (GameWindow.getGlobalAwareness() > 70 && !type.equals("Vaccine")) return false;
+
+		return true;
 	}
 
 	private void stopAnimation(boolean isInfected) {
@@ -153,5 +191,21 @@ public class Transport {
 					JOptionPane.WARNING_MESSAGE
 			);
 		}
+	}
+
+	public static void setSanitationEffect(double effect) {
+		sanitationEffect = effect;
+	}
+
+	public static void setRapidTesting(boolean enabled) {
+		rapidTestingEnabled = enabled;
+	}
+
+	public static void setVaccinePriority(boolean enabled) {
+		vaccinePriority = enabled;
+	}
+
+	public String getType() {
+		return this.type;
 	}
 }

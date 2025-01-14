@@ -13,8 +13,9 @@ public class Country {
 	private double infectionRate; // Rate of infection spread within the country
 	private int population;
 	private int infectedPopulation;
+	private double area; // Area in square kilometers
 
-	public Country(String name, int x, int y, String continent, double infectionRate, int population) {
+	public Country(String name, int x, int y, String continent, double infectionRate, int population, double area) {
 		this.name = name;
 		this.x = x;
 		this.y = y;
@@ -22,6 +23,7 @@ public class Country {
 		this.infectionRate = infectionRate;
 		this.population = population;
 		this.infectedPopulation = 0;
+		this.area = area;
 
 		// Create a button to represent the country
 		button = new JButton(getButtonText());
@@ -123,6 +125,10 @@ public class Country {
 		return population;
 	}
 
+	public double getPopulationDensity() {
+		return population / area;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -137,5 +143,13 @@ public class Country {
 
 	public int getY() {
 		return y;
+	}
+
+	public double getArea() {
+		return area;
+	}
+
+	public void setArea(double area) {
+		this.area = area;
 	}
 }
