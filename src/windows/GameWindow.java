@@ -20,6 +20,7 @@ public class GameWindow extends JFrame {
 	private JLabel timerLabel;
 	private JProgressBar vaccineProgressBar;
 	private int score = 0;
+	private int points = 0;
 	private int timeElapsed = 0;
 	private Timer timer;
 	private Timer randomTransportTimer;
@@ -184,10 +185,11 @@ public class GameWindow extends JFrame {
 
 
 	private void openUpgradeStore() {
-		UpgradeStoreDialog store = new UpgradeStoreDialog(this, upgrades, score);
+		UpgradeStoreDialog store = new UpgradeStoreDialog(this, upgrades, points);
 		store.setVisible(true);
-		score = store.getRemainingPoints();
-		scoreLabel.setText("Score: " + score);
+
+		// Update remaining points after closing the store
+		points = store.getRemainingPoints();
 	}
 
 	private List<Country> initializeCountries(JPanel mapPanel) {
@@ -401,8 +403,9 @@ public class GameWindow extends JFrame {
 
 		// Add click listener
 		icon.addActionListener(e -> {
-			score += pointsEarned; // Increment the score
-			scoreLabel.setText("Score: " + score); // Update score display
+			score += pointsEarned; // Update total score
+			points += pointsEarned; // Update spendable points
+			scoreLabel.setText("Score: " + score); // Display total score
 
 			// Remove the icon
 			layeredPane.remove(icon);
