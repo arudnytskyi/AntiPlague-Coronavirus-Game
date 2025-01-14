@@ -1,4 +1,6 @@
-package utilities;
+package windows;
+
+import utilities.Upgrade;
 
 import javax.swing.*;
 import java.awt.*;
