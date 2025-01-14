@@ -31,6 +31,7 @@ public class GameWindow extends JFrame {
 	private String difficulty;
 	private double infectionRate;
 	private static int globalAwareness = 0;
+	private int laboratoryCount = 0;
 	private boolean isInfectionStarted = false;
 
 	public GameWindow(String difficulty) {
@@ -131,23 +132,19 @@ public class GameWindow extends JFrame {
 		List<Upgrade> upgradeList = new ArrayList<>();
 
 		// Vaccine Development Upgrade
-		upgradeList.add(new Upgrade("Vaccine Research", 50, "Adds +5% to vaccine development.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Research", 20, "Adds +5% to vaccine development.", () -> {
 			int currentProgress = vaccineProgressBar.getValue();
 			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100)); // Add 5% progress, max 100%
 			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%!");
 		}));
 
 		// Laboratory Upgrade
-		upgradeList.add(new Upgrade("Build Laboratory", 100, "Adds a laboratory that increases vaccine progress over time.", () -> {
+		upgradeList.add(new Upgrade("Build Laboratory", 1, "Adds a laboratory that increases vaccine progress over time.", () -> {
 			startLaboratoryProgress();
 			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
 		}));
 
-		// Add existing upgrades (e.g., quarantine, vaccination)
-		upgradeList.add(new Upgrade("Quarantine", 50, "Reduce infection rate in one country.", () -> {
-			infectionRate -= 0.01; // Reduce infection rate globally
-			JOptionPane.showMessageDialog(this, "Infection rate reduced globally!");
-		}));
+		upgradeList.add(new Upgrade("Vaccine Distribution", 100, "Enable vaccine distribution via transport.", this::startVaccineTransport));
 
 		upgradeList.add(new Upgrade("Cancel Mutation", 75, "Decreases the infection rate by 0.01 (1%).", () -> {
 			if (infectionRate > 0.01) {
@@ -275,17 +272,25 @@ public class GameWindow extends JFrame {
 		randomTransportTimer = new Timer(5000, e -> {
 			if (!transports.isEmpty()) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
-
 				if (randomTransport.isRouteOperational()) {
-					randomTransport.startTransport();
-				} else {
-					System.out.println("Route is not operational: " + randomTransport.getType());
+					randomTransport.startTransport(false); // Regular transport
 				}
 			}
 		});
 		randomTransportTimer.start();
 	}
 
+	private void startVaccineTransport() {
+		randomTransportTimer = new Timer(15000, e -> {
+			if (!transports.isEmpty()) {
+				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
+				if (randomTransport.isRouteOperational() && randomTransport.getType().equals("Airline")) {
+					randomTransport.startTransport(true); // Vaccine transport
+				}
+			}
+		});
+		randomTransportTimer.start();
+	}
 
 	private void promptForFirstInfectedCountry() {
 		SwingUtilities.invokeLater(() -> {
@@ -349,11 +354,12 @@ public class GameWindow extends JFrame {
 	}
 
 	private void startLaboratoryProgress() {
+		laboratoryCount++;
 		if (labTimer == null) {
 			labTimer = new Timer(7000, e -> {
 				int currentProgress = vaccineProgressBar.getValue();
 				if (currentProgress < 100) {
-					vaccineProgressBar.setValue(Math.min(currentProgress + 1, 100)); // Add 1% progress every 2 seconds
+					vaccineProgressBar.setValue(Math.min(currentProgress + laboratoryCount, 100)); // Add 1% progress every 2 seconds
 				} else {
 					labTimer.stop();
 				}

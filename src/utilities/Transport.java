@@ -20,6 +20,7 @@ public class Transport {
 	private static final int ICON_SIZE = 30; // Desired icon size (width and height)
 	private ImageIcon normalIcon;
 	private ImageIcon infectedIcon;
+	private ImageIcon vaccineIcon;
 	private static double sanitationEffect = 1.0;
 	private static boolean rapidTestingEnabled = false;
 	private static boolean vaccinePriority = false;
@@ -33,9 +34,11 @@ public class Transport {
 		// Load and scale the original icon
 		normalIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + ".png"), ICON_SIZE, ICON_SIZE);
 		infectedIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_infected.png"), ICON_SIZE, ICON_SIZE);
+		vaccineIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_vaccine.png"), ICON_SIZE, ICON_SIZE);
+
 		transportIcon = new JLabel(normalIcon);
 		transportIcon.setBounds(origin.getX(), origin.getY(), ICON_SIZE, ICON_SIZE);
-		transportIcon.setVisible(false); // Initially hidden
+		transportIcon.setVisible(false);
 		mapPanel.add(transportIcon);
 		mapPanel.revalidate();
 		mapPanel.repaint();
@@ -69,7 +72,7 @@ public class Transport {
 		return new ImageIcon(rotatedImage);
 	}
 
-	public void startTransport() {
+	public void startTransport(boolean forVaccine) {
 		// Calculate distance and duration
 		int dx = destination.getX() - origin.getX();
 		int dy = destination.getY() - origin.getY();
@@ -87,19 +90,33 @@ public class Transport {
 
 		// Calculate angle for rotation (in radians)
 		double angle = Math.atan2(dy, dx);
-
+		ImageIcon icon = forVaccine ? vaccineIcon : (isInfected ? infectedIcon : normalIcon);
 
 		// Set initial position and visibility
-		transportIcon.setIcon(rotateIcon(isInfected ? infectedIcon : normalIcon, angle));
+		transportIcon.setIcon(rotateIcon(icon, angle));
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		transportIcon.setVisible(true);
 
 		// Start the animation timer
-		animationTimer = new Timer(10, e -> animateTransport(isInfected));
+		animationTimer = new Timer(10, e -> animateTransport(isInfected, forVaccine));
 		animationTimer.start();
 	}
 
-	private void animateTransport(boolean isInfected) {
+	public void spreadVaccine() {
+		if (origin.isVaccinated() && !destination.isVaccinated()) {
+			destination.setVaccinated(true);
+			destination.updateVaccination();
+			JOptionPane.showMessageDialog(
+					null,
+					"Vaccine transport has spread the vaccine to " + destination.getName() + "!\n" +
+							"Vaccinated Population: " + destination.getVaccinatedPopulation() + "/" + destination.getPopulation(),
+					"Vaccine Update",
+					JOptionPane.INFORMATION_MESSAGE
+			);
+		}
+	}
+
+	private void animateTransport(boolean isInfected, boolean forVaccine) {
 		currentStep++;
 		int newX = (int) (origin.getX() + stepX * currentStep);
 		int newY = (int) (origin.getY() + stepY * currentStep);
@@ -109,7 +126,7 @@ public class Transport {
 		mapPanel.repaint();
 
 		if (currentStep >= totalSteps) {
-			stopAnimation(isInfected);
+			stopAnimation(isInfected, forVaccine);
 		}
 	}
 
@@ -147,7 +164,7 @@ public class Transport {
 		return true;
 	}
 
-	private void stopAnimation(boolean isInfected) {
+	private void stopAnimation(boolean isInfected, boolean forVaccine) {
 		if (animationTimer != null) {
 			animationTimer.stop();
 			animationTimer = null;
@@ -158,7 +175,9 @@ public class Transport {
 		mapPanel.revalidate();
 		mapPanel.repaint();
 
-		if (isInfected) {
+		if (forVaccine) {
+			spreadVaccine();
+		} else if (isInfected) {
 			spreadInfection();
 		}
 	}

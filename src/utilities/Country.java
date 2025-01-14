@@ -14,6 +14,8 @@ public class Country {
 	private int population;
 	private int infectedPopulation;
 	private double area; // Area in square kilometers
+	private boolean vaccinated = false; // Whether the country is vaccinated
+	private int vaccinatedPopulation = 0;
 
 	public Country(String name, int x, int y, String continent, double infectionRate, int population, double area) {
 		this.name = name;
@@ -72,6 +74,27 @@ public class Country {
 			// Update the appearance of the country
 			updateButtonAppearance();
 		}
+	}
+
+	public void updateVaccination() {
+		if (vaccinated && vaccinatedPopulation < population) {
+			// Increase vaccinated population and decrease infection proportionally
+			int newVaccinated = (int) Math.ceil((infectionRate * (population - vaccinatedPopulation)) / 10);
+			vaccinatedPopulation += newVaccinated;
+			vaccinatedPopulation = Math.min(vaccinatedPopulation, population);
+			infectedPopulation -= newVaccinated;
+			infectedPopulation = Math.max(infectedPopulation, 0);
+
+			updateButtonAppearance();
+		}
+	}
+
+	public void setVaccinated(boolean vaccinated) {
+		this.vaccinated = vaccinated;
+		if (vaccinated && vaccinatedPopulation == 0) {
+			vaccinatedPopulation = 1; // Start with at least one vaccinated individual
+		}
+		updateButtonAppearance();
 	}
 
 	private void updateButtonAppearance() {
@@ -151,5 +174,13 @@ public class Country {
 
 	public void setArea(double area) {
 		this.area = area;
+	}
+
+	public boolean isVaccinated() {
+		return vaccinated;
+	}
+
+	public int getVaccinatedPopulation() {
+		return vaccinatedPopulation;
 	}
 }
