@@ -45,7 +45,6 @@ public class UpgradeStoreDialog extends JDialog {
 			points -= upgrade.getCost();
 			pointsLabel.setText("Points: " + points);
 			upgrade.getEffect().apply();
-			JOptionPane.showMessageDialog(this, "Purchased: " + upgrade.getName(), "Upgrade Successful", JOptionPane.INFORMATION_MESSAGE);
 		} else {
 			JOptionPane.showMessageDialog(this, "Not enough points!", "Error", JOptionPane.ERROR_MESSAGE);
 		}

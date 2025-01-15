@@ -5,27 +5,28 @@ import java.awt.*;
 
 public class Country {
 	private String name;
-	private int x, y;
 	private String continent;
-	private boolean infected = false; // Whether the country has any infection
-	private boolean selectable = false;
 	private JButton button;
-	private double infectionRate; // Rate of infection spread within the country
-	private int population;
+	private int x, y;
+	private boolean selectable = false;
+	private boolean infected = false;
+	private boolean vaccinated = false;
+	private double area;
+	private double infectionRate;
+	private int normalPopulation;
 	private int infectedPopulation;
-	private double area; // Area in square kilometers
-	private boolean vaccinated = false; // Whether the country is vaccinated
-	private int vaccinatedPopulation = 0;
+	private int vaccinatedPopulation;
 
-	public Country(String name, int x, int y, String continent, double infectionRate, int population, double area) {
+	public Country(String name, int x, int y, String continent, double infectionRate, int totalPopulation, double area) {
 		this.name = name;
+		this.continent = continent;
+		this.area = area;
 		this.x = x;
 		this.y = y;
-		this.continent = continent;
 		this.infectionRate = infectionRate;
-		this.population = population;
+		this.normalPopulation = totalPopulation;
 		this.infectedPopulation = 0;
-		this.area = area;
+		this.vaccinatedPopulation = 0;
 
 		// Create a button to represent the country
 		button = new JButton(getButtonText());
@@ -48,45 +49,72 @@ public class Country {
 			);
 			if (confirm == JOptionPane.YES_OPTION) {
 				setInfected(true);
-				selectable = false; // Lock selection
-				JOptionPane.showMessageDialog(
-						null,
-						name + " is now infected. Initial infected: 1/" + population,
-						"Infection Started",
-						JOptionPane.INFORMATION_MESSAGE
-				);
+				selectable = false;
 			}
 		} else {
-			String message = infected
-					? name + " is infected! Infected Population: " + infectedPopulation + "/" + population
-					: name + " is safe. Population: " + population;
+			int totalPopulation = getTotalPopulation(); // Assuming this method gives the total population
+			double normalPercentage = ((double) normalPopulation / totalPopulation) * 100;
+			double infectedPercentage = ((double) infectedPopulation / totalPopulation) * 100;
+			double vaccinatedPercentage = ((double) vaccinatedPopulation / totalPopulation) * 100;
+
+			// Construct the message
+			String message = String.format(
+					"%s is infected!%nInfected Population: %d (%.2f%%)%n" +
+							"Normal Population: %d (%.2f%%)%nVaccinated Population: %d (%.2f%%)",
+					name, infectedPopulation, infectedPercentage,
+					normalPopulation, normalPercentage,
+					vaccinatedPopulation, vaccinatedPercentage
+			);
+
+			// Show the message
 			JOptionPane.showMessageDialog(null, message, "Country Status", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
 	public void updateInfection() {
-		if (infected && infectedPopulation < population) {
-			// Calculate new infections as a percentage of the remaining uninfected population
-			int newInfections = (int) Math.ceil((infectionRate * (population - infectedPopulation)) / 10); // Spread more gradually
-			infectedPopulation += newInfections;
-			infectedPopulation = Math.min(infectedPopulation, population); // Ensure it doesn't exceed the total population
+		if (infected && normalPopulation > 0) {
+			// Calculate new infections based on exponential growth
+			int newInfections = (int) Math.ceil(infectedPopulation * infectionRate);
+			newInfections = Math.min(newInfections, normalPopulation);
 
-			// Update the appearance of the country
-			updateButtonAppearance();
+			// Update populations safely
+			normalPopulation -= newInfections;
+			infectedPopulation += newInfections;
+
+//			// Log output (use logging frameworks for production)
+//			System.out.println("New infections: " + newInfections + ", Normal: " + normalPopulation);
+//			System.out.println("Infected population: " + infectedPopulation);
 		}
 	}
 
 	public void updateVaccination() {
-		if (vaccinated && vaccinatedPopulation < population) {
-			// Increase vaccinated population and decrease infection proportionally
-			int newVaccinated = (int) Math.ceil((infectionRate * (population - vaccinatedPopulation)) / 10);
-			vaccinatedPopulation += newVaccinated;
-			vaccinatedPopulation = Math.min(vaccinatedPopulation, population);
-			infectedPopulation -= newVaccinated;
-			infectedPopulation = Math.max(infectedPopulation, 0);
+		if (vaccinated && (normalPopulation > 0 || infectedPopulation > 0)) {
+			double randomRate = 1 + (Math.random() * 2);
+			// Calculate new vaccinations with a fixed rate
+			int newVaccinations = (int) Math.ceil(vaccinatedPopulation * randomRate);
+			newVaccinations = Math.min(newVaccinations, normalPopulation + infectedPopulation);
 
-			updateButtonAppearance();
+			// Allocate vaccinations to infected and normal populations
+			int vaccinatableFromInfected = Math.min(newVaccinations, infectedPopulation);
+			infectedPopulation -= vaccinatableFromInfected;
+			vaccinatedPopulation += vaccinatableFromInfected;
+
+			int vaccinatableFromNormal = Math.min(newVaccinations - vaccinatableFromInfected, normalPopulation);
+			normalPopulation -= vaccinatableFromNormal;
+			vaccinatedPopulation += vaccinatableFromNormal;
+
+			System.out.println("Infected remaining: " + infectedPopulation);
+			System.out.println("Normal remaining: " + normalPopulation);
+			System.out.println("Vaccinated total: " + vaccinatedPopulation);
 		}
+	}
+
+	public void setInfected(boolean infected) {
+		this.infected = infected;
+		if (infected && infectedPopulation == 0) {
+			infectedPopulation = 1; // Start with at least one infected individual
+		}
+		updateButtonAppearance();
 	}
 
 	public void setVaccinated(boolean vaccinated) {
@@ -98,7 +126,7 @@ public class Country {
 	}
 
 	private void updateButtonAppearance() {
-		double infectionPercentage = (double) infectedPopulation / population * 100;
+		double infectionPercentage = (double) infectedPopulation / normalPopulation * 100;
 		if (infected) {
 			button.setBackground(Color.RED);
 			button.setForeground(Color.WHITE);
@@ -112,23 +140,15 @@ public class Country {
 
 	private String getButtonText() {
 		if (infected) {
-			double infectionPercentage = (double) infectedPopulation / population * 100;
+			double infectionPercentage = (double) infectedPopulation / getTotalPopulation() * 100;
 			return name + " (" + (int) infectionPercentage + "% Infected)";
 		} else {
-			return name + " (Population: " + population + ")";
+			return name + " (Population: " + normalPopulation + ")";
 		}
 	}
 
 	public boolean isInfected() {
 		return infected;
-	}
-
-	public void setInfected(boolean infected) {
-		this.infected = infected;
-		if (infected && infectedPopulation == 0) {
-			infectedPopulation = 1; // Start with at least one infected individual
-		}
-		updateButtonAppearance();
 	}
 
 	public void setSelectable(boolean selectable) {
@@ -140,16 +160,8 @@ public class Country {
 		return infectionRate;
 	}
 
-	public int getInfectedPopulation() {
-		return infectedPopulation;
-	}
-
-	public int getPopulation() {
-		return population;
-	}
-
 	public double getPopulationDensity() {
-		return population / area;
+		return normalPopulation / area;
 	}
 
 	public String getName() {
@@ -180,7 +192,27 @@ public class Country {
 		return vaccinated;
 	}
 
+	public int getNormalPopulation() {
+		return normalPopulation;
+	}
+
+	public int getInfectedPopulation() {
+		return infectedPopulation;
+	}
+
 	public int getVaccinatedPopulation() {
 		return vaccinatedPopulation;
+	}
+
+	public int getTotalPopulation() {
+		return normalPopulation + infectedPopulation + vaccinatedPopulation;
+	}
+
+	public boolean isAllInfected() {
+		return infectedPopulation == getTotalPopulation();
+	}
+
+	public boolean isNoInfectionsLeft() {
+		return infectedPopulation == 0;
 	}
 }

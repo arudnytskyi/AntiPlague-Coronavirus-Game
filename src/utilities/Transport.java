@@ -85,7 +85,7 @@ public class Transport {
 		stepY = (double) dy / totalSteps;
 
 		// Determine if the transport is infected
-		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getPopulation() * sanitationEffect;;
+		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getNormalPopulation() * sanitationEffect;;
 		boolean isInfected = Math.random() < infectionProbability;
 
 		// Calculate angle for rotation (in radians)
@@ -101,15 +101,30 @@ public class Transport {
 		animationTimer = new Timer(10, e -> animateTransport(isInfected, forVaccine));
 		animationTimer.start();
 	}
+	private void spreadInfection() {
+		if (origin.isInfected() && !destination.isInfected()) {
+			destination.setInfected(true);
+			destination.updateInfection();
+
+			JOptionPane.showMessageDialog(
+					null,
+					"Infected transport has spread the infection to " + destination.getName() + "!\n" +
+							"Total Infected: " + destination.getInfectedPopulation() + "/" + destination.getNormalPopulation(),
+					"Infection Update",
+					JOptionPane.WARNING_MESSAGE
+			);
+		}
+	}
 
 	public void spreadVaccine() {
-		if (origin.isVaccinated() && !destination.isVaccinated()) {
+		if (!destination.isVaccinated()) {
 			destination.setVaccinated(true);
 			destination.updateVaccination();
+
 			JOptionPane.showMessageDialog(
 					null,
 					"Vaccine transport has spread the vaccine to " + destination.getName() + "!\n" +
-							"Vaccinated Population: " + destination.getVaccinatedPopulation() + "/" + destination.getPopulation(),
+							"Vaccinated Population: " + destination.getVaccinatedPopulation() + "/" + destination.getNormalPopulation(),
 					"Vaccine Update",
 					JOptionPane.INFORMATION_MESSAGE
 			);
@@ -137,8 +152,8 @@ public class Transport {
 			}
 		}
 
-		double originInfection = (double) origin.getInfectedPopulation() / origin.getPopulation();
-		double destinationInfection = (double) destination.getInfectedPopulation() / destination.getPopulation();
+		double originInfection = (double) origin.getInfectedPopulation() / origin.getNormalPopulation();
+		double destinationInfection = (double) destination.getInfectedPopulation() / destination.getNormalPopulation();
 
 		if (vaccinePriority) {
 			return true;
@@ -193,23 +208,6 @@ public class Transport {
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		mapPanel.revalidate();
 		mapPanel.repaint();
-	}
-
-	private void spreadInfection() {
-		if (origin.isInfected() && !destination.isInfected()) {
-			Country destinationCountry = destination;
-
-			destinationCountry.setInfected(true); // Mark destination as infected
-			destinationCountry.updateInfection(); // Apply new infections incrementally
-
-			JOptionPane.showMessageDialog(
-					null,
-					"Infected transport has spread the infection to " + destinationCountry.getName() + "!\n" +
-							"Total Infected: " + destinationCountry.getInfectedPopulation() + "/" + destinationCountry.getPopulation(),
-					"Infection Update",
-					JOptionPane.WARNING_MESSAGE
-			);
-		}
 	}
 
 	public static void setSanitationEffect(double effect) {

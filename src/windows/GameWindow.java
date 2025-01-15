@@ -40,13 +40,13 @@ public class GameWindow extends JFrame {
 		// Set infection rate based on difficulty
 		switch (difficulty) {
 			case "Easy":
-				infectionRate = 0.05;
+				infectionRate = 1;
 				break;
 			case "Medium":
-				infectionRate = 0.1;
+				infectionRate = 1.1;
 				break;
 			case "Hard":
-				infectionRate = 0.2;
+				infectionRate = 1.2;
 				break;
 		}
 
@@ -132,7 +132,7 @@ public class GameWindow extends JFrame {
 		List<Upgrade> upgradeList = new ArrayList<>();
 
 		// Vaccine Development Upgrade
-		upgradeList.add(new Upgrade("Vaccine Research", 20, "Adds +5% to vaccine development.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Research", 1, "Adds +5% to vaccine development.", () -> {
 			int currentProgress = vaccineProgressBar.getValue();
 			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100)); // Add 5% progress, max 100%
 			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%!");
@@ -144,9 +144,9 @@ public class GameWindow extends JFrame {
 			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
 		}));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution", 100, "Enable vaccine distribution via transport.", this::startVaccineTransport));
+		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", this::startVaccineTransport));
 
-		upgradeList.add(new Upgrade("Cancel Mutation", 75, "Decreases the infection rate by 0.01 (1%).", () -> {
+		upgradeList.add(new Upgrade("Cancel Mutation", 1, "Decreases the infection rate by 0.01 (1%).", () -> {
 			if (infectionRate > 0.01) {
 				infectionRate -= 0.01; // Reduce infection rate by 1%
 				JOptionPane.showMessageDialog(this, "Mutation canceled! Infection rate decreased by 1%.",
@@ -157,23 +157,23 @@ public class GameWindow extends JFrame {
 			}
 		}));
 
-		upgradeList.add(new Upgrade("Sanitation Protocols", 50, "Reduce infection spread during transport by 50%.", () -> {
+		upgradeList.add(new Upgrade("Sanitation Protocols", 1, "Reduce infection spread during transport by 50%.", () -> {
 			Transport.setSanitationEffect(0.5); // Reduce infection probability by 50%
 			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability reduced by 50%.");
 		}));
 
-		upgradeList.add(new Upgrade("Rapid Testing", 75, "Reopen transport routes faster after infection levels drop.", () -> {
+		upgradeList.add(new Upgrade("Rapid Testing", 1, "Reopen transport routes faster after infection levels drop.", () -> {
 			Transport.setRapidTesting(true); // Enable rapid testing
 			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Routes will reopen faster.");
 		}));
 
-		upgradeList.add(new Upgrade("Infection-Free Zones", 150, "Keep routes between infection-free countries open.", this::markInfectionFreeZones));
+		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", this::markInfectionFreeZones));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 200, "Prioritize vaccine delivery routes.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 1, "Prioritize vaccine delivery routes.", () -> {
 			Transport.setVaccinePriority(true);
 		}));
 
-		upgradeList.add(new Upgrade("Media Campaign", 30, "Delay route closures by calming public fears.", () -> {
+		upgradeList.add(new Upgrade("Media Campaign", 1, "Delay route closures by calming public fears.", () -> {
 			GameWindow.adjustGlobalAwareness(-10); // Decrease awareness
 		}));
 
@@ -212,7 +212,7 @@ public class GameWindow extends JFrame {
 			int x = (int) data[1];
 			int y = (int) data[2];
 			String continent = (String) data[3];
-			double infectionRate = (double) data[4];
+			double infectionRate = (double) data[4] + this.infectionRate;
 			int population = (int) data[5];
 			double area = (double) data[6];
 
@@ -269,7 +269,7 @@ public class GameWindow extends JFrame {
 	}
 
 	private void startRandomTransport() {
-		randomTransportTimer = new Timer(5000, e -> {
+		randomTransportTimer = new Timer(1000, e -> {
 			if (!transports.isEmpty()) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
 				if (randomTransport.isRouteOperational()) {
@@ -284,7 +284,7 @@ public class GameWindow extends JFrame {
 		randomTransportTimer = new Timer(15000, e -> {
 			if (!transports.isEmpty()) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
-				if (randomTransport.isRouteOperational() && randomTransport.getType().equals("Airline")) {
+				if (randomTransport.isRouteOperational()) {
 					randomTransport.startTransport(true); // Vaccine transport
 				}
 			}
@@ -446,45 +446,52 @@ public class GameWindow extends JFrame {
 
 		for (Country country : countries) {
 			totalInfected += country.getInfectedPopulation();
-			totalPopulation += country.getPopulation();
+			totalPopulation += country.getNormalPopulation();
 		}
 
 		int newAwareness = (int) ((double) totalInfected / totalPopulation * 100);
 		adjustGlobalAwareness(newAwareness - globalAwareness); // Adjust awareness gradually
 	}
 
-
-	private void updateTimer() {
-		timeElapsed++;
-		timerLabel.setText("Time: " + timeElapsed + "s");
-		updateGameLogic();
-	}
-
 	private void updateGameLogic() {
 		for (Country country : countries) {
 			if (country.isInfected()) {
-				country.updateInfection(); // Dynamically update infection within the country
+				country.updateInfection();
+			}
+			if (country.isVaccinated()) {
+				country.updateVaccination();
 			}
 		}
 
 		// Update global awareness after infection updates
 		updateGlobalAwareness();
 
-		if (isGameOver()) {
-			endGame();
-		}
+		isGameOver();
 	}
 
-	private boolean isGameOver() {
+	public void isGameOver() {
+		boolean allInfected = true;
+		boolean noInfectionsLeft = true;
+
 		for (Country country : countries) {
-			if (!country.isInfected()) {
-				return false; // At least one country is still safe
+			if (country.getInfectedPopulation() > 0) {
+				noInfectionsLeft = false;
+			}
+			if (!country.isAllInfected()) {
+				allInfected = false;
 			}
 		}
-		return true; // All countries are infected
+
+		if (allInfected) {
+			endGame(false); // Game lost
+		}
+
+		if (noInfectionsLeft) {
+			endGame(true); // Game won
+		}
 	}
 
-	private void endGame() {
+	private void endGame(boolean isVictory) {
 		// Stop the main game timer
 		if (timer != null) {
 			timer.stop();
@@ -500,7 +507,11 @@ public class GameWindow extends JFrame {
 			transport.stopAnimationManually(); // Implement this in the Transport class
 		}
 
-		JOptionPane.showMessageDialog(this, "Game Over! Your Score: " + score, "Game Over", JOptionPane.INFORMATION_MESSAGE);
+		if (isVictory) {
+			JOptionPane.showMessageDialog(this, "Congratulations! You have eradicated the virus.\nYour Score: " + score, "Victory", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(this, "Game Over! The entire world has been infected.\nYour Score: " + score, "Defeat", JOptionPane.ERROR_MESSAGE);
+		}
 		dispose();
 	}
 
