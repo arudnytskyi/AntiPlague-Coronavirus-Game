@@ -108,8 +108,7 @@ public class Transport {
 
 			JOptionPane.showMessageDialog(
 					null,
-					"Infected transport has spread the infection to " + destination.getName() + "!\n" +
-							"Total Infected: " + destination.getInfectedPopulation() + "/" + destination.getNormalPopulation(),
+					"infection has spread to " + destination.getName(),
 					"Infection Update",
 					JOptionPane.WARNING_MESSAGE
 			);
@@ -123,8 +122,7 @@ public class Transport {
 
 			JOptionPane.showMessageDialog(
 					null,
-					"Vaccine transport has spread the vaccine to " + destination.getName() + "!\n" +
-							"Vaccinated Population: " + destination.getVaccinatedPopulation() + "/" + destination.getNormalPopulation(),
+					"Vaccine has spread to " + destination.getName(),
 					"Vaccine Update",
 					JOptionPane.INFORMATION_MESSAGE
 			);

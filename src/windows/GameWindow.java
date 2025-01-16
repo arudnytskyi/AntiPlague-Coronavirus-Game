@@ -131,24 +131,25 @@ public class GameWindow extends JFrame {
 	private List<Upgrade> initializeUpgrades() {
 		List<Upgrade> upgradeList = new ArrayList<>();
 
-		// Vaccine Development Upgrade
 		upgradeList.add(new Upgrade("Vaccine Research", 1, "Adds +5% to vaccine development.", () -> {
 			int currentProgress = vaccineProgressBar.getValue();
-			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100)); // Add 5% progress, max 100%
-			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%!");
+			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100));
+			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%.");
 		}));
 
-		// Laboratory Upgrade
 		upgradeList.add(new Upgrade("Build Laboratory", 1, "Adds a laboratory that increases vaccine progress over time.", () -> {
 			startLaboratoryProgress();
 			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
 		}));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", this::startVaccineTransport));
+		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", () -> {
+			startVaccineTransport();
+			JOptionPane.showMessageDialog(this, "Vaccine distribution via transport enabled.");
+		}));
 
 		upgradeList.add(new Upgrade("Cancel Mutation", 1, "Decreases the infection rate by 0.01 (1%).", () -> {
-			if (infectionRate > 0.01) {
-				infectionRate -= 0.01; // Reduce infection rate by 1%
+			if (infectionRate > 0.9) {
+				infectionRate -= 0.01;
 				JOptionPane.showMessageDialog(this, "Mutation canceled! Infection rate decreased by 1%.",
 						"Upgrade Successful", JOptionPane.INFORMATION_MESSAGE);
 			} else {
@@ -158,23 +159,28 @@ public class GameWindow extends JFrame {
 		}));
 
 		upgradeList.add(new Upgrade("Sanitation Protocols", 1, "Reduce infection spread during transport by 50%.", () -> {
-			Transport.setSanitationEffect(0.5); // Reduce infection probability by 50%
-			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability reduced by 50%.");
+			Transport.setSanitationEffect(0.5);
+			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability during transport reduced by 50%.");
 		}));
 
 		upgradeList.add(new Upgrade("Rapid Testing", 1, "Reopen transport routes faster after infection levels drop.", () -> {
-			Transport.setRapidTesting(true); // Enable rapid testing
-			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Routes will reopen faster.");
+			Transport.setRapidTesting(true);
+			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Transport routes will reopen faster after infection drops.");
 		}));
 
-		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", this::markInfectionFreeZones));
+		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", () -> {
+			markInfectionFreeZones();
+			JOptionPane.showMessageDialog(this, "Infection-Free Zone protocols established. Routes between infection-free countries will remain open.");
+		}));
 
 		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 1, "Prioritize vaccine delivery routes.", () -> {
 			Transport.setVaccinePriority(true);
+			JOptionPane.showMessageDialog(this, "Vaccine Distribution Networks established. Vaccine delivery routes will be prioritized.");
 		}));
 
 		upgradeList.add(new Upgrade("Media Campaign", 1, "Delay route closures by calming public fears.", () -> {
-			GameWindow.adjustGlobalAwareness(-10); // Decrease awareness
+			GameWindow.adjustGlobalAwareness(-10);
+			JOptionPane.showMessageDialog(this, "Media Campaign launched. Public awareness lowered, delaying potential route closures.");
 		}));
 
 		return upgradeList;
