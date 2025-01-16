@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameWindow extends JFrame {
-	private List<Country> countries;
-	private List<Transport> transports;
-	private List<Upgrade> upgrades;
+	private final List<Country> countries;
+	private final List<Transport> transports;
+	private final List<Upgrade> upgrades;
 	private List<JButton> activeIcons;
 	private JPanel mapPanel;
 	private JLayeredPane layeredPane;
@@ -33,7 +33,6 @@ public class GameWindow extends JFrame {
 	private static int globalAwareness = 0;
 	private int laboratoryCount = 0;
 	private boolean isInfectionStarted = false;
-	HighScoreManager highScoreManager;
 
 	public GameWindow(String difficulty) {
 		this.difficulty = difficulty;
@@ -54,7 +53,7 @@ public class GameWindow extends JFrame {
 		// Set up the frame
 		setTitle("AntiPlague Game - " + difficulty + " Mode");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(800, 600);
+		setSize(900, 600);
 		setLocationRelativeTo(null);
 		setResizable(false);
 
@@ -106,20 +105,17 @@ public class GameWindow extends JFrame {
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
-		JButton pauseButton = new JButton("Pause");
 		JButton quitButton = new JButton("Quit");
-		controlPanel.add(pauseButton);
 		controlPanel.add(quitButton);
 		panel.add(controlPanel, BorderLayout.SOUTH);
 
 		// Add panel to frame
 		add(panel);
 
-		globalAwarenessTimer = new Timer(5000, e -> updateGlobalAwareness()); // Update every 5 seconds
+		globalAwarenessTimer = new Timer(5000, e -> updateGlobalAwareness());
 		globalAwarenessTimer.start();
 
 		// Button actions
-		pauseButton.addActionListener(e -> pauseGame());
 		quitButton.addActionListener(e -> quitGame());
 
 		// Add Ctrl+Shift+Q shortcut
@@ -201,16 +197,16 @@ public class GameWindow extends JFrame {
 
 		// Countries with their coordinates, continent assignments, infection rate, and population
 		Object[][] countryData = {
-				{"USA", 100, 100, "North America", 0.1, 331000000, 9833520.0},
-				{"Canada", 200, 50, "North America", 0.08, 38000000, 9984670.0},
-				{"Mexico", 150, 200, "North America", 0.09, 126000000, 1964375.0},
-				{"Brazil", 250, 300, "South America", 0.12, 213000000, 8515767.0},
-				{"UK", 500, 50, "Europe", 0.1, 68000000, 243610.0},
-				{"France", 550, 100, "Europe", 0.1, 65000000, 551695.0},
-				{"Germany", 600, 150, "Europe", 0.1, 83000000, 357022.0},
-				{"India", 700, 300, "Asia", 0.15, 1390000000, 3287263.0},
-				{"China", 750, 200, "Asia", 0.15, 1440000000, 9596961.0},
-				{"Australia", 800, 400, "Australia", 0.1, 26000000, 7692024.0}
+				{"USA", 70, 100, "North America", 0.12, 331000000, 9833520.0},
+				{"Canada", 170, 50, "North America", 0.08, 38000000, 9984670.0},
+				{"Mexico", 120, 200, "North America", 0.09, 126000000, 1964375.0},
+				{"Brazil", 210, 300, "South America", 0.14, 213000000, 8515767.0},
+				{"UK", 470, 50, "Europe", 0.11, 68000000, 243610.0},
+				{"France", 520, 100, "Europe", 0.1, 65000000, 551695.0},
+				{"Germany", 570, 150, "Europe", 0.07, 83000000, 357022.0},
+				{"India", 670, 300, "Asia", 0.15, 1390000000, 3287263.0},
+				{"China", 720, 200, "Asia", 0.13, 1440000000, 9596961.0},
+				{"Australia", 770, 400, "Australia", 0.06, 26000000, 7692024.0}
 		};
 
 
@@ -537,12 +533,6 @@ public class GameWindow extends JFrame {
 			JOptionPane.showMessageDialog(null,
 					"Score not saved.", "Notice", JOptionPane.WARNING_MESSAGE);
 		}
-	}
-
-	private void pauseGame() {
-		timer.stop();
-		JOptionPane.showMessageDialog(this, "Game Paused. Press OK to Resume.", "Pause", JOptionPane.INFORMATION_MESSAGE);
-		timer.start();
 	}
 
 	private void quitGame() {

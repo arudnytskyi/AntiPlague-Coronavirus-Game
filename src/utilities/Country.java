@@ -4,15 +4,15 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Country {
-	private String name;
-	private String continent;
-	private JButton button;
-	private int x, y;
+	private final String name;
+	private final String continent;
+	private final JButton button;
+	private final int x, y;
+	private final double infectionRate;
+	private final double area;
 	private boolean selectable = false;
 	private boolean infected = false;
 	private boolean vaccinated = false;
-	private double area;
-	private double infectionRate;
 	private int normalPopulation;
 	private int infectedPopulation;
 	private int vaccinatedPopulation;
@@ -70,12 +70,16 @@ public class Country {
 		double vaccinatedPercentage = ((double) vaccinatedPopulation / totalPopulation) * 100;
 
 		return String.format(
-				"%s %nInfected Population: %d (%.2f%%)%n" +
-						"Normal Population: %d (%.2f%%)%nVaccinated Population: %d (%.2f%%)",
-				name, infectedPopulation, infectedPercentage,
+				"%s Infection Rate: %.2f%% %n" +
+				"Infected Population: %d (%.2f%%)%n" +
+				"Normal Population: %d (%.2f%%)%n" +
+				"Vaccinated Population: %d (%.2f%%)%n",
+				name, infectionRate,
+				infectedPopulation, infectedPercentage,
 				normalPopulation, normalPercentage,
 				vaccinatedPopulation, vaccinatedPercentage
 		);
+
 	}
 
 	public void updateInfection() {
@@ -124,7 +128,9 @@ public class Country {
 	}
 
 	private void updateButtonAppearance() {
-		if (infected) {
+		if (vaccinated) {
+			button.setBackground(new Color(144,213,255));
+		} else if (infected) {
 			button.setBackground(new Color(255, 150, 150));
 		} else {
 			button.setBackground(Color.WHITE);
