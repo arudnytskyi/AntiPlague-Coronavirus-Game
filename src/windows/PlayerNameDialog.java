@@ -2,7 +2,6 @@ package windows;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class PlayerNameDialog extends JDialog {
@@ -12,43 +11,72 @@ public class PlayerNameDialog extends JDialog {
 
 	public PlayerNameDialog(Frame owner) {
 		super(owner, "Enter Your Name", true);
-		setLayout(new BorderLayout());
-		setSize(300, 150);
-		setLocationRelativeTo(owner);
 
-		JLabel label = new JLabel("Enter your name for the high score:");
-		label.setHorizontalAlignment(SwingConstants.CENTER);
-		add(label, BorderLayout.NORTH);
+		setTitle("Enter Your Name");
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setLayout(new BorderLayout());
+
+		// Title styling similar to MainMenu
+		JLabel titleLabel = new JLabel("Enter Your Name", SwingConstants.CENTER);
+		titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+		add(titleLabel, BorderLayout.NORTH);
+
+		// Main panel styling
+		JPanel mainPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
 
 		nameField = new JTextField();
-		add(nameField, BorderLayout.CENTER);
+		nameField.setPreferredSize(new Dimension(200, 30));
+		nameField.setFont(new Font("Arial", Font.PLAIN, 14));
+		gbc.gridy = 0;
+		gbc.gridwidth = 2;
+		mainPanel.add(nameField, gbc);
 
-		JPanel buttonPanel = new JPanel();
-		JButton confirmButton = new JButton("OK");
-		JButton cancelButton = new JButton("Cancel");
+		add(mainPanel, BorderLayout.CENTER);
 
-		confirmButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				playerName = nameField.getText().trim();
-				if (!playerName.isEmpty()) {
-					confirmed = true;
-					dispose();
-				} else {
-					JOptionPane.showMessageDialog(PlayerNameDialog.this,
-							"Name cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		});
+		// Button panel styling
+		JPanel buttonPanel = new JPanel(new GridBagLayout());
+		JButton confirmButton = createDialogButton("OK");
+		JButton cancelButton = createDialogButton("Cancel");
 
-		cancelButton.addActionListener(e -> {
-			confirmed = false;
-			dispose();
-		});
+		confirmButton.addActionListener(getConfirmAction());
+		cancelButton.addActionListener(e -> dispose());
 
-		buttonPanel.add(confirmButton);
-		buttonPanel.add(cancelButton);
+		gbc.gridwidth = 1;
+		gbc.gridy = 0;
+		gbc.gridx = 0;
+		buttonPanel.add(confirmButton, gbc);
+
+		gbc.gridx = 1;
+		buttonPanel.add(cancelButton, gbc);
+
 		add(buttonPanel, BorderLayout.SOUTH);
+
+		setPreferredSize(new Dimension(400, 200));
+		pack();
+		setLocationRelativeTo(owner);
+	}
+
+	private JButton createDialogButton(String text) {
+		JButton button = new JButton(text);
+		button.setFont(new Font("Arial", Font.PLAIN, 18));
+		button.setFocusPainted(false);
+		button.setPreferredSize(new Dimension(120, 40));
+		return button;
+	}
+
+	private ActionListener getConfirmAction() {
+		return e -> {
+			playerName = nameField.getText().trim();
+			if (!playerName.isEmpty()) {
+				confirmed = true;
+				dispose();
+			} else {
+				JOptionPane.showMessageDialog(this, "Name cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		};
 	}
 
 	public String getPlayerName() {

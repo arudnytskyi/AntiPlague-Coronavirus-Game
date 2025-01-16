@@ -499,7 +499,6 @@ public class GameWindow extends JFrame {
 	}
 
 	private void endGame(boolean isVictory) {
-		// Stop timers and animations
 		if (timer != null) {
 			timer.stop();
 		}
@@ -514,26 +513,30 @@ public class GameWindow extends JFrame {
 			JOptionPane.showMessageDialog(this,
 					"Congratulations! You have eradicated the virus.\nYour Score: " + score,
 					"Victory", JOptionPane.INFORMATION_MESSAGE);
-			PlayerNameDialog dialog = new PlayerNameDialog(this);
-			dialog.setVisible(true);
-
-			if (dialog.isConfirmed()) {
-				String playerName = dialog.getPlayerName();
-				HighScoreManager.getInstance().addHighScore(playerName, score, difficulty);
-
-				JOptionPane.showMessageDialog(null,
-						"High score saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-			} else {
-				JOptionPane.showMessageDialog(null,
-						"High score not saved.", "Notice", JOptionPane.WARNING_MESSAGE);
-			}
 		} else {
 			JOptionPane.showMessageDialog(this,
 					"Game Over! The entire world has been infected.\nYour Score: " + score,
 					"Defeat", JOptionPane.ERROR_MESSAGE);
 		}
 
+		addScore();
 		dispose();
+	}
+
+	private void addScore() {
+		PlayerNameDialog dialog = new PlayerNameDialog(this);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			String playerName = dialog.getPlayerName();
+			HighScoreManager.getInstance().addHighScore(playerName, score, difficulty);
+
+			JOptionPane.showMessageDialog(null,
+					"Score saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(null,
+					"Score not saved.", "Notice", JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
 	private void pauseGame() {

@@ -16,7 +16,6 @@ public class MainMenu extends JFrame {
 
 		highScoreManager = HighScoreManager.getInstance();
 
-		// Center panel for buttons
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridBagLayout());
 
@@ -25,7 +24,6 @@ public class MainMenu extends JFrame {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.gridx = 0;
 
-		// New Game Button
 		JButton newGameButton = createMenuButton("New Game");
 		gbc.gridy = 0;
 		buttonPanel.add(newGameButton, gbc);

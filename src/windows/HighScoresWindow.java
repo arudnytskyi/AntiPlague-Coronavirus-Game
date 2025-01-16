@@ -8,8 +8,8 @@ import java.awt.*;
 import java.util.List;
 
 public class HighScoresWindow extends JDialog {
-	private JList<String> highScoreList;
-	private HighScoreManager highScoreManager;
+	private final JList<String> highScoreList;
+	private final HighScoreManager highScoreManager;
 	public HighScoresWindow(JFrame parent, HighScoreManager highScoreManager) {
 		super(parent, "High Scores", true);
 		this.highScoreManager = highScoreManager;
@@ -65,17 +65,16 @@ public class HighScoresWindow extends JDialog {
 				return c;
 			}
 		});
-		System.out.println(highScoreList);
 		return highScoreList;
 	}
 
 	public void refreshHighScores() {
 		DefaultListModel<String> model = new DefaultListModel<>();
-		List<HighScoreManager.HighScore> highScores = highScoreManager.getHighScores(); // Fetch updated data
+		List<HighScoreManager.HighScore> highScores = highScoreManager.getHighScores();
 		for (HighScoreManager.HighScore score : highScores) {
 			model.addElement(score.toString());
 		}
-		highScoreList.setModel(model); // Update the displayed list
+		highScoreList.setModel(model);
 	}
 
 }

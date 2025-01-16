@@ -24,7 +24,7 @@ public class HighScoreManager {
 		int finalScore = (int) (score * multiplier);
 
 		highScores.add(new HighScore(playerName, finalScore));
-		Collections.sort(highScores); // Sort by score descending
+		Collections.sort(highScores);
 
 		if (highScores.size() > 10) {
 			highScores = new ArrayList<>(highScores.subList(0, 10));
@@ -33,7 +33,6 @@ public class HighScoreManager {
 		saveHighScores();
 	}
 
-	// Get the high scores list
 	public List<HighScore> getHighScores() {
 		return new ArrayList<>(highScores);
 	}
@@ -48,7 +47,7 @@ public class HighScoreManager {
 
 	public static HighScoreManager getInstance() {
 		if (instance == null) {
-			synchronized (HighScoreManager.class) { // Thread-safe initialization
+			synchronized (HighScoreManager.class) {
 				if (instance == null) {
 					instance = new HighScoreManager();
 				}
@@ -57,36 +56,26 @@ public class HighScoreManager {
 		return instance;
 	}
 
-	// Load high scores from file
 	private List<HighScore> loadHighScores() {
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
 			return (List<HighScore>) ois.readObject();
 		} catch (IOException | ClassNotFoundException e) {
-			return new ArrayList<>(); // Return empty list if file doesn't exist
+			return new ArrayList<>();
 		}
 	}
 
-	// Inner class to represent a high score
 	public static class HighScore implements Serializable, Comparable<HighScore> {
-		private String playerName;
-		private int score;
+		private final String playerName;
+		private final int score;
 
 		public HighScore(String playerName, int score) {
 			this.playerName = playerName;
 			this.score = score;
 		}
 
-		public String getPlayerName() {
-			return playerName;
-		}
-
-		public int getScore() {
-			return score;
-		}
-
 		@Override
 		public int compareTo(HighScore other) {
-			return Integer.compare(other.score, this.score); // Descending order
+			return Integer.compare(other.score, this.score);
 		}
 
 		@Override
