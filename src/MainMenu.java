@@ -61,28 +61,15 @@ public class MainMenu extends JFrame {
 		button.setFocusPainted(false);
 		button.setPreferredSize(new Dimension(200, 50));
 
-		button.addMouseListener(new java.awt.event.MouseAdapter() {
-			@Override
-			public void mouseEntered(java.awt.event.MouseEvent evt) {
-				button.setBackground(Color.LIGHT_GRAY);
-			}
-
-			@Override
-			public void mouseExited(java.awt.event.MouseEvent evt) {
-				button.setBackground(UIManager.getColor("Button.background"));
-			}
-		});
 		return button;
 	}
 
 	private void startNewGame() {
-		// Open difficulty selection dialog
 		DifficultySelectionDialog dialog = new DifficultySelectionDialog(this);
 		dialog.setVisible(true);
 	}
 
 	private void showHighScores() {
-		// Pass HighScoreManager to HighScoresWindow
 		HighScoresWindow highScoresWindow = new HighScoresWindow(this, highScoreManager);
 		highScoresWindow.setVisible(true);
 	}
