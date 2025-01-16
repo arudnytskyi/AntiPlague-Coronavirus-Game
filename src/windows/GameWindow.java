@@ -33,6 +33,7 @@ public class GameWindow extends JFrame {
 	private static int globalAwareness = 0;
 	private int laboratoryCount = 0;
 	private boolean isInfectionStarted = false;
+	HighScoreManager highScoreManager;
 
 	public GameWindow(String difficulty) {
 		this.difficulty = difficulty;
@@ -498,26 +499,40 @@ public class GameWindow extends JFrame {
 	}
 
 	private void endGame(boolean isVictory) {
-		// Stop the main game timer
+		// Stop timers and animations
 		if (timer != null) {
 			timer.stop();
 		}
-
-		// Stop the transport animation timer
 		if (randomTransportTimer != null) {
 			randomTransportTimer.stop();
 		}
-
-		// Stop all animations in transports
 		for (Transport transport : transports) {
-			transport.stopAnimationManually(); // Implement this in the Transport class
+			transport.stopAnimationManually();
 		}
 
 		if (isVictory) {
-			JOptionPane.showMessageDialog(this, "Congratulations! You have eradicated the virus.\nYour Score: " + score, "Victory", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Congratulations! You have eradicated the virus.\nYour Score: " + score,
+					"Victory", JOptionPane.INFORMATION_MESSAGE);
+			PlayerNameDialog dialog = new PlayerNameDialog(this);
+			dialog.setVisible(true);
+
+			if (dialog.isConfirmed()) {
+				String playerName = dialog.getPlayerName();
+				HighScoreManager.getInstance().addHighScore(playerName, score, difficulty);
+
+				JOptionPane.showMessageDialog(null,
+						"High score saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+			} else {
+				JOptionPane.showMessageDialog(null,
+						"High score not saved.", "Notice", JOptionPane.WARNING_MESSAGE);
+			}
 		} else {
-			JOptionPane.showMessageDialog(this, "Game Over! The entire world has been infected.\nYour Score: " + score, "Defeat", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Game Over! The entire world has been infected.\nYour Score: " + score,
+					"Defeat", JOptionPane.ERROR_MESSAGE);
 		}
+
 		dispose();
 	}
 

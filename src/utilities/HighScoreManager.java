@@ -7,20 +7,27 @@ import java.util.List;
 
 public class HighScoreManager {
 	private static final String FILE_NAME = "highscores.dat";
+	private static HighScoreManager instance;
 	private List<HighScore> highScores;
 
 	public HighScoreManager() {
 		highScores = loadHighScores();
 	}
 
-	// Add a new high score
-	public void addHighScore(String playerName, int score) {
-		highScores.add(new HighScore(playerName, score));
+	public void addHighScore(String playerName, int score, String difficultyLevel) {
+		double multiplier = switch (difficultyLevel) {
+			case "Easy" -> 1;
+			case "Medium" -> 1.1;
+			case "Hard" -> 1.2;
+			default -> 0;
+		};
+		int finalScore = (int) (score * multiplier);
+
+		highScores.add(new HighScore(playerName, finalScore));
 		Collections.sort(highScores); // Sort by score descending
 
-		// Ensure only top 10 scores are kept (using a new ArrayList to avoid SubList issue)
 		if (highScores.size() > 10) {
-			highScores = new ArrayList<>(highScores.subList(0, 10)); // Create a new list from the subList
+			highScores = new ArrayList<>(highScores.subList(0, 10));
 		}
 
 		saveHighScores();
@@ -28,10 +35,9 @@ public class HighScoreManager {
 
 	// Get the high scores list
 	public List<HighScore> getHighScores() {
-		return highScores;
+		return new ArrayList<>(highScores);
 	}
 
-	// Save high scores to file
 	private void saveHighScores() {
 		try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME))) {
 			oos.writeObject(highScores);
@@ -40,8 +46,18 @@ public class HighScoreManager {
 		}
 	}
 
+	public static HighScoreManager getInstance() {
+		if (instance == null) {
+			synchronized (HighScoreManager.class) { // Thread-safe initialization
+				if (instance == null) {
+					instance = new HighScoreManager();
+				}
+			}
+		}
+		return instance;
+	}
+
 	// Load high scores from file
-	@SuppressWarnings("unchecked")
 	private List<HighScore> loadHighScores() {
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
 			return (List<HighScore>) ois.readObject();

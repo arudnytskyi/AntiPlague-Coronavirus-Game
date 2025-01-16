@@ -8,8 +8,12 @@ import java.awt.*;
 import java.util.List;
 
 public class HighScoresWindow extends JDialog {
+	private JList<String> highScoreList;
+	private HighScoreManager highScoreManager;
 	public HighScoresWindow(JFrame parent, HighScoreManager highScoreManager) {
 		super(parent, "High Scores", true);
+		this.highScoreManager = highScoreManager;
+
 		setLayout(new BorderLayout());
 
 		JLabel title = new JLabel("High Scores", SwingConstants.CENTER);
@@ -18,13 +22,9 @@ public class HighScoresWindow extends JDialog {
 		add(title, BorderLayout.NORTH);
 
 		DefaultListModel<String> listModel = new DefaultListModel<>();
-		List<HighScoreManager.HighScore> highScores = highScoreManager.getHighScores();
+		highScoreList = getHighScoreList(listModel);
 
-		JList<String> highScoreList = getHighScoreList(listModel);
-
-		for (HighScoreManager.HighScore score : highScores) {
-			listModel.addElement(score.toString());
-		}
+		refreshHighScores();
 
 		JScrollPane scrollPane = new JScrollPane(highScoreList);
 		scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -47,7 +47,6 @@ public class HighScoresWindow extends JDialog {
 
 	private static JList<String> getHighScoreList(DefaultListModel<String> listModel) {
 		JList<String> highScoreList = new JList<>(listModel);
-
 		highScoreList.setSelectionModel(new DefaultListSelectionModel() {
 			@Override
 			public void setSelectionInterval(int index0, int index1) {}
@@ -66,6 +65,17 @@ public class HighScoresWindow extends JDialog {
 				return c;
 			}
 		});
+		System.out.println(highScoreList);
 		return highScoreList;
 	}
+
+	public void refreshHighScores() {
+		DefaultListModel<String> model = new DefaultListModel<>();
+		List<HighScoreManager.HighScore> highScores = highScoreManager.getHighScores(); // Fetch updated data
+		for (HighScoreManager.HighScore score : highScores) {
+			model.addElement(score.toString());
+		}
+		highScoreList.setModel(model); // Update the displayed list
+	}
+
 }

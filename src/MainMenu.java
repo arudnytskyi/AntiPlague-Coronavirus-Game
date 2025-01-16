@@ -14,7 +14,7 @@ public class MainMenu extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
 
-		highScoreManager = new HighScoreManager();
+		highScoreManager = HighScoreManager.getInstance();
 
 		// Center panel for buttons
 		JPanel buttonPanel = new JPanel();
@@ -71,6 +71,7 @@ public class MainMenu extends JFrame {
 
 	private void showHighScores() {
 		HighScoresWindow highScoresWindow = new HighScoresWindow(this, highScoreManager);
+		highScoresWindow.refreshHighScores();
 		highScoresWindow.setVisible(true);
 	}
 
