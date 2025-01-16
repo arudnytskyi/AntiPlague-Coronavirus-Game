@@ -2,45 +2,68 @@ package windows;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class DifficultySelectionDialog extends JDialog {
 	public DifficultySelectionDialog(JFrame parent) {
 		super(parent, "Select Difficulty", true);
-		setSize(300, 200);
-		setLocationRelativeTo(parent);
+		setLayout(new BorderLayout());
 
-		// Main panel
-		JPanel panel = new JPanel();
-		panel.setLayout(new GridLayout(4, 1, 10, 10));
-		panel.setBackground(Color.LIGHT_GRAY);
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new GridBagLayout());
 
-		// Label
-		JLabel label = new JLabel("Choose Difficulty Level:", SwingConstants.CENTER);
-		label.setFont(new Font("Arial", Font.BOLD, 16));
-		panel.add(label);
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridx = 0;
 
-		// Difficulty buttons
-		JButton easyButton = new JButton("Easy");
-		JButton mediumButton = new JButton("Medium");
-		JButton hardButton = new JButton("Hard");
+		JButton easyButton = createMenuButton("Easy");
+		gbc.gridy = 0;
+		buttonPanel.add(easyButton, gbc);
 
-		panel.add(easyButton);
-		panel.add(mediumButton);
-		panel.add(hardButton);
+		JButton mediumButton = createMenuButton("Medium");
+		gbc.gridy = 1;
+		buttonPanel.add(mediumButton, gbc);
 
-		// Add panel to dialog
-		add(panel);
+		JButton hardButton = createMenuButton("Hard");
+		gbc.gridy = 2;
+		buttonPanel.add(hardButton, gbc);
 
-		// Button listeners
+		JButton backButton = createMenuButton("Back");
+		gbc.gridy = 3;
+		buttonPanel.add(backButton, gbc);
+
+		add(buttonPanel, BorderLayout.CENTER);
+
+		JLabel titleLabel = new JLabel("Choose Difficulty Level:", SwingConstants.CENTER);
+		titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+		add(titleLabel, BorderLayout.NORTH);
+
+		setPreferredSize(new Dimension(400, 350));
+		pack();
+		setLocationRelativeTo(null);
+
 		easyButton.addActionListener(e -> startGame("Easy"));
 		mediumButton.addActionListener(e -> startGame("Medium"));
 		hardButton.addActionListener(e -> startGame("Hard"));
+
+		backButton.addActionListener(e -> goBackToMainMenu());
+	}
+
+	private JButton createMenuButton(String text) {
+		JButton button = new JButton(text);
+		button.setFont(new Font("Arial", Font.PLAIN, 18));
+		button.setFocusPainted(false);
+		button.setPreferredSize(new Dimension(200, 50));
+
+		return button;
 	}
 
 	private void startGame(String difficulty) {
 		dispose();
-		new GameWindow(difficulty); // Pass difficulty to the game window
+		new GameWindow(difficulty);
+	}
+
+	private void goBackToMainMenu() {
+		dispose();
 	}
 }

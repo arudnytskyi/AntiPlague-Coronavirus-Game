@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameWindow extends JFrame {
-	private List<Country> countries;
-	private List<Transport> transports;
-	private List<Upgrade> upgrades;
+	private final List<Country> countries;
+	private final List<Transport> transports;
+	private final List<Upgrade> upgrades;
 	private List<JButton> activeIcons;
 	private JPanel mapPanel;
 	private JLayeredPane layeredPane;
@@ -53,7 +53,7 @@ public class GameWindow extends JFrame {
 		// Set up the frame
 		setTitle("AntiPlague Game - " + difficulty + " Mode");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(800, 600);
+		setSize(900, 600);
 		setLocationRelativeTo(null);
 		setResizable(false);
 
@@ -105,20 +105,17 @@ public class GameWindow extends JFrame {
 
 		// Control panel with pause and quit buttons
 		JPanel controlPanel = new JPanel();
-		JButton pauseButton = new JButton("Pause");
 		JButton quitButton = new JButton("Quit");
-		controlPanel.add(pauseButton);
 		controlPanel.add(quitButton);
 		panel.add(controlPanel, BorderLayout.SOUTH);
 
 		// Add panel to frame
 		add(panel);
 
-		globalAwarenessTimer = new Timer(5000, e -> updateGlobalAwareness()); // Update every 5 seconds
+		globalAwarenessTimer = new Timer(5000, e -> updateGlobalAwareness());
 		globalAwarenessTimer.start();
 
 		// Button actions
-		pauseButton.addActionListener(e -> pauseGame());
 		quitButton.addActionListener(e -> quitGame());
 
 		// Add Ctrl+Shift+Q shortcut
@@ -131,24 +128,25 @@ public class GameWindow extends JFrame {
 	private List<Upgrade> initializeUpgrades() {
 		List<Upgrade> upgradeList = new ArrayList<>();
 
-		// Vaccine Development Upgrade
 		upgradeList.add(new Upgrade("Vaccine Research", 1, "Adds +5% to vaccine development.", () -> {
 			int currentProgress = vaccineProgressBar.getValue();
-			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100)); // Add 5% progress, max 100%
-			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%!");
+			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100));
+			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%.");
 		}));
 
-		// Laboratory Upgrade
 		upgradeList.add(new Upgrade("Build Laboratory", 1, "Adds a laboratory that increases vaccine progress over time.", () -> {
 			startLaboratoryProgress();
 			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
 		}));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", this::startVaccineTransport));
+		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", () -> {
+			startVaccineTransport();
+			JOptionPane.showMessageDialog(this, "Vaccine distribution via transport enabled.");
+		}));
 
 		upgradeList.add(new Upgrade("Cancel Mutation", 1, "Decreases the infection rate by 0.01 (1%).", () -> {
-			if (infectionRate > 0.01) {
-				infectionRate -= 0.01; // Reduce infection rate by 1%
+			if (infectionRate > 0.9) {
+				infectionRate -= 0.01;
 				JOptionPane.showMessageDialog(this, "Mutation canceled! Infection rate decreased by 1%.",
 						"Upgrade Successful", JOptionPane.INFORMATION_MESSAGE);
 			} else {
@@ -158,23 +156,28 @@ public class GameWindow extends JFrame {
 		}));
 
 		upgradeList.add(new Upgrade("Sanitation Protocols", 1, "Reduce infection spread during transport by 50%.", () -> {
-			Transport.setSanitationEffect(0.5); // Reduce infection probability by 50%
-			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability reduced by 50%.");
+			Transport.setSanitationEffect(0.5);
+			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability during transport reduced by 50%.");
 		}));
 
 		upgradeList.add(new Upgrade("Rapid Testing", 1, "Reopen transport routes faster after infection levels drop.", () -> {
-			Transport.setRapidTesting(true); // Enable rapid testing
-			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Routes will reopen faster.");
+			Transport.setRapidTesting(true);
+			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Transport routes will reopen faster after infection drops.");
 		}));
 
-		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", this::markInfectionFreeZones));
+		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", () -> {
+			markInfectionFreeZones();
+			JOptionPane.showMessageDialog(this, "Infection-Free Zone protocols established. Routes between infection-free countries will remain open.");
+		}));
 
 		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 1, "Prioritize vaccine delivery routes.", () -> {
 			Transport.setVaccinePriority(true);
+			JOptionPane.showMessageDialog(this, "Vaccine Distribution Networks established. Vaccine delivery routes will be prioritized.");
 		}));
 
 		upgradeList.add(new Upgrade("Media Campaign", 1, "Delay route closures by calming public fears.", () -> {
-			GameWindow.adjustGlobalAwareness(-10); // Decrease awareness
+			GameWindow.adjustGlobalAwareness(-10);
+			JOptionPane.showMessageDialog(this, "Media Campaign launched. Public awareness lowered, delaying potential route closures.");
 		}));
 
 		return upgradeList;
@@ -194,16 +197,16 @@ public class GameWindow extends JFrame {
 
 		// Countries with their coordinates, continent assignments, infection rate, and population
 		Object[][] countryData = {
-				{"USA", 100, 100, "North America", 0.1, 331000000, 9833520.0},
-				{"Canada", 200, 50, "North America", 0.08, 38000000, 9984670.0},
-				{"Mexico", 150, 200, "North America", 0.09, 126000000, 1964375.0},
-				{"Brazil", 250, 300, "South America", 0.12, 213000000, 8515767.0},
-				{"UK", 500, 50, "Europe", 0.1, 68000000, 243610.0},
-				{"France", 550, 100, "Europe", 0.1, 65000000, 551695.0},
-				{"Germany", 600, 150, "Europe", 0.1, 83000000, 357022.0},
-				{"India", 700, 300, "Asia", 0.15, 1390000000, 3287263.0},
-				{"China", 750, 200, "Asia", 0.15, 1440000000, 9596961.0},
-				{"Australia", 800, 400, "Australia", 0.1, 26000000, 7692024.0}
+				{"USA", 70, 100, "North America", 0.12, 331000000, 9833520.0},
+				{"Canada", 170, 50, "North America", 0.08, 38000000, 9984670.0},
+				{"Mexico", 120, 200, "North America", 0.09, 126000000, 1964375.0},
+				{"Brazil", 210, 300, "South America", 0.14, 213000000, 8515767.0},
+				{"UK", 470, 50, "Europe", 0.11, 68000000, 243610.0},
+				{"France", 520, 100, "Europe", 0.1, 65000000, 551695.0},
+				{"Germany", 570, 150, "Europe", 0.07, 83000000, 357022.0},
+				{"India", 670, 300, "Asia", 0.15, 1390000000, 3287263.0},
+				{"China", 720, 200, "Asia", 0.13, 1440000000, 9596961.0},
+				{"Australia", 770, 400, "Australia", 0.06, 26000000, 7692024.0}
 		};
 
 
@@ -492,33 +495,44 @@ public class GameWindow extends JFrame {
 	}
 
 	private void endGame(boolean isVictory) {
-		// Stop the main game timer
 		if (timer != null) {
 			timer.stop();
 		}
-
-		// Stop the transport animation timer
 		if (randomTransportTimer != null) {
 			randomTransportTimer.stop();
 		}
-
-		// Stop all animations in transports
 		for (Transport transport : transports) {
-			transport.stopAnimationManually(); // Implement this in the Transport class
+			transport.stopAnimationManually();
 		}
 
 		if (isVictory) {
-			JOptionPane.showMessageDialog(this, "Congratulations! You have eradicated the virus.\nYour Score: " + score, "Victory", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Congratulations! You have eradicated the virus.\nYour Score: " + score,
+					"Victory", JOptionPane.INFORMATION_MESSAGE);
 		} else {
-			JOptionPane.showMessageDialog(this, "Game Over! The entire world has been infected.\nYour Score: " + score, "Defeat", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,
+					"Game Over! The entire world has been infected.\nYour Score: " + score,
+					"Defeat", JOptionPane.ERROR_MESSAGE);
 		}
+
+		addScore();
 		dispose();
 	}
 
-	private void pauseGame() {
-		timer.stop();
-		JOptionPane.showMessageDialog(this, "Game Paused. Press OK to Resume.", "Pause", JOptionPane.INFORMATION_MESSAGE);
-		timer.start();
+	private void addScore() {
+		PlayerNameDialog dialog = new PlayerNameDialog(this);
+		dialog.setVisible(true);
+
+		if (dialog.isConfirmed()) {
+			String playerName = dialog.getPlayerName();
+			HighScoreManager.getInstance().addHighScore(playerName, score, difficulty);
+
+			JOptionPane.showMessageDialog(null,
+					"Score saved successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+		} else {
+			JOptionPane.showMessageDialog(null,
+					"Score not saved.", "Notice", JOptionPane.WARNING_MESSAGE);
+		}
 	}
 
 	private void quitGame() {

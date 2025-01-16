@@ -5,111 +5,97 @@ import windows.HighScoresWindow;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
 public class MainMenu extends JFrame {
-	private HighScoreManager highScoreManager; // Declare at class level
+	private final HighScoreManager highScoreManager;
 
 	public MainMenu() {
-		// Initialize high score manager
-		highScoreManager = new HighScoreManager();
-
-		// Set up the frame
 		setTitle("AntiPlague Coronavirus Game");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setSize(400, 300);
-		setLocationRelativeTo(null); // Center the window
-		setResizable(false);
+		setLayout(new BorderLayout());
 
-		// Main panel for layout
-		JPanel panel = new JPanel();
-		panel.setLayout(new BorderLayout());
-		panel.setBackground(Color.DARK_GRAY);
+		highScoreManager = HighScoreManager.getInstance();
 
-		// Title label
-		JLabel title = new JLabel("AntiPlague Game", SwingConstants.CENTER);
-		title.setFont(new Font("Arial", Font.BOLD, 24));
-		title.setForeground(Color.WHITE);
-		title.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-		panel.add(title, BorderLayout.NORTH);
-
-		// Button panel
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new GridLayout(3, 1, 10, 10));
-		buttonPanel.setBackground(Color.DARK_GRAY);
+		buttonPanel.setLayout(new GridBagLayout());
 
-		// Buttons
-		JButton newGameButton = new JButton("New Game");
-		JButton highScoresButton = new JButton("High Scores");
-		JButton exitButton = new JButton("Exit");
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(10, 10, 10, 10);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.gridx = 0;
 
-		// Style buttons
-		Font buttonFont = new Font("Arial", Font.PLAIN, 18);
-		newGameButton.setFont(buttonFont);
-		highScoresButton.setFont(buttonFont);
-		exitButton.setFont(buttonFont);
+		JButton newGameButton = createMenuButton("New Game");
+		gbc.gridy = 0;
+		buttonPanel.add(newGameButton, gbc);
 
-		// Add buttons to panel
-		buttonPanel.add(newGameButton);
-		buttonPanel.add(highScoresButton);
-		buttonPanel.add(exitButton);
+		JButton highScoresButton = createMenuButton("High Scores");
+		gbc.gridy = 1;
+		buttonPanel.add(highScoresButton, gbc);
 
-		// Add button panel to main panel
-		panel.add(buttonPanel, BorderLayout.CENTER);
+		JButton exitButton = createMenuButton("Exit");
+		gbc.gridy = 2;
+		buttonPanel.add(exitButton, gbc);
 
-		// Add action listeners
-		newGameButton.addActionListener(e -> showDifficultySelection());
+		newGameButton.addActionListener(e -> startNewGame());
 		highScoresButton.addActionListener(e -> showHighScores());
 		exitButton.addActionListener(e -> System.exit(0));
 
-		// Add panel to frame
-		add(panel);
+		add(buttonPanel, BorderLayout.CENTER);
 
-		// Add Ctrl+Shift+Q shortcut
-		addKeyBindings(panel);
+		JLabel titleLabel = new JLabel("Welcome to AntiPlague", SwingConstants.CENTER);
+		titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+		add(titleLabel, BorderLayout.NORTH);
 
-		// Make frame visible
-		setVisible(true);
+		setPreferredSize(new Dimension(400, 300));
+		pack();
+		setLocationRelativeTo(null);
+
+		addKeyBindings();
 	}
 
-	// Display difficulty selection dialog
-	private void showDifficultySelection() {
+	private JButton createMenuButton(String text) {
+		JButton button = new JButton(text);
+		button.setFont(new Font("Arial", Font.PLAIN, 18));
+		button.setFocusPainted(false);
+		button.setPreferredSize(new Dimension(200, 50));
+
+		return button;
+	}
+
+	private void startNewGame() {
 		DifficultySelectionDialog dialog = new DifficultySelectionDialog(this);
 		dialog.setVisible(true);
 	}
 
-	// Show high scores
 	private void showHighScores() {
 		HighScoresWindow highScoresWindow = new HighScoresWindow(this, highScoreManager);
+		highScoresWindow.refreshHighScores();
 		highScoresWindow.setVisible(true);
 	}
 
-	// Add method to simulate adding a high score
-	private void simulateAddHighScore(String playerName, int score) {
-		highScoreManager.addHighScore(playerName, score);
-	}
+	private void addKeyBindings() {
+		JRootPane rootPane = this.getRootPane();
+		InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap actionMap = rootPane.getActionMap();
 
-	// Add Ctrl+Shift+Q shortcut
-	private void addKeyBindings(JPanel panel) {
-		panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
-				KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_DOWN_MASK | KeyEvent.SHIFT_DOWN_MASK), "quitToMenu");
-		panel.getActionMap().put("quitToMenu", new AbstractAction() {
+		KeyStroke keyStroke = KeyStroke.getKeyStroke("ctrl shift Q");
+
+		inputMap.put(keyStroke, "returnToMenu");
+		actionMap.put("returnToMenu", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainMenu.this, "Returning to Main Menu", "Shortcut Triggered", JOptionPane.INFORMATION_MESSAGE);
-				// Logic for quitting the current game (if implemented)
+				System.out.println("Ctrl+Shift+Q pressed. Returning to main menu.");
+				// Add logic to return to main menu
+				// For now, just ensure this MainMenu window is visible
+				setVisible(true);
 			}
 		});
 	}
 
-	// Main method to run the program
 	public static void main(String[] args) {
 		SwingUtilities.invokeLater(() -> {
 			MainMenu mainMenu = new MainMenu();
-			// Simulate adding some scores for testing
-			mainMenu.simulateAddHighScore("Alice", 1200);
-			mainMenu.simulateAddHighScore("Bob", 800);
-			mainMenu.simulateAddHighScore("Charlie", 1500);
+			mainMenu.setVisible(true);
 		});
 	}
 }

@@ -8,23 +8,30 @@ import java.util.List;
 
 public class UpgradeStoreDialog extends JDialog {
 	private int points;
-	private JLabel pointsLabel;
+	private final JLabel pointsLabel;
 
 	public UpgradeStoreDialog(JFrame parent, List<Upgrade> upgrades, int points) {
 		super(parent, "Upgrade Store", true);
 		this.points = points;
 
-		setSize(400, 300);
+		setSize(400, 550);
 		setLocationRelativeTo(parent);
 		setLayout(new BorderLayout());
 
-		// Points display
 		pointsLabel = new JLabel("Points: " + points);
 		pointsLabel.setFont(new Font("Arial", Font.BOLD, 16));
 		pointsLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		add(pointsLabel, BorderLayout.NORTH);
 
-		// Upgrades list
+		JScrollPane scrollPane = getjScrollPane(upgrades);
+		add(scrollPane, BorderLayout.CENTER);
+
+		JButton closeButton = new JButton("Close");
+		closeButton.addActionListener(e -> dispose());
+		add(closeButton, BorderLayout.SOUTH);
+	}
+
+	private JScrollPane getjScrollPane(List<Upgrade> upgrades) {
 		JPanel upgradePanel = new JPanel(new GridLayout(upgrades.size(), 1, 5, 5));
 		for (Upgrade upgrade : upgrades) {
 			JButton upgradeButton = new JButton(upgrade.getName() + " - " + upgrade.getCost() + " Points");
@@ -32,12 +39,10 @@ public class UpgradeStoreDialog extends JDialog {
 			upgradeButton.addActionListener(e -> purchaseUpgrade(upgrade));
 			upgradePanel.add(upgradeButton);
 		}
-		add(new JScrollPane(upgradePanel), BorderLayout.CENTER);
 
-		// Close button
-		JButton closeButton = new JButton("Close");
-		closeButton.addActionListener(e -> dispose());
-		add(closeButton, BorderLayout.SOUTH);
+		JScrollPane scrollPane = new JScrollPane(upgradePanel);
+		scrollPane.setBorder(BorderFactory.createEmptyBorder());
+		return scrollPane;
 	}
 
 	private void purchaseUpgrade(Upgrade upgrade) {

@@ -1,10 +1,10 @@
 package utilities;
 
 public class Upgrade {
-	private String name;
-	private int cost;
-	private String description;
-	private UpgradeEffect effect;
+	private final String name;
+	private final int cost;
+	private final String description;
+	private final UpgradeEffect effect;
 
 	public Upgrade(String name, int cost, String description, UpgradeEffect effect) {
 		this.name = name;

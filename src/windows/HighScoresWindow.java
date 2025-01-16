@@ -3,44 +3,78 @@ package windows;
 import utilities.HighScoreManager;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
 
 public class HighScoresWindow extends JDialog {
+	private final JList<String> highScoreList;
+	private final HighScoreManager highScoreManager;
 	public HighScoresWindow(JFrame parent, HighScoreManager highScoreManager) {
 		super(parent, "High Scores", true);
-		setSize(400, 300);
-		setLocationRelativeTo(parent);
+		this.highScoreManager = highScoreManager;
 
-		// Main panel
-		JPanel panel = new JPanel(new BorderLayout());
-		panel.setBackground(Color.LIGHT_GRAY);
+		setLayout(new BorderLayout());
 
-		// Title
 		JLabel title = new JLabel("High Scores", SwingConstants.CENTER);
-		title.setFont(new Font("Arial", Font.BOLD, 20));
+		title.setFont(new Font("Arial", Font.BOLD, 24));
 		title.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
-		panel.add(title, BorderLayout.NORTH);
+		add(title, BorderLayout.NORTH);
 
-		// High Scores List
 		DefaultListModel<String> listModel = new DefaultListModel<>();
+		highScoreList = getHighScoreList(listModel);
+
+		refreshHighScores();
+
+		JScrollPane scrollPane = new JScrollPane(highScoreList);
+		scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+		add(scrollPane, BorderLayout.CENTER);
+
+		JPanel closeButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		JButton closeButton = new JButton("Close");
+		closeButton.setFont(new Font("Arial", Font.PLAIN, 18));
+		closeButton.addActionListener(e -> dispose());
+		closeButton.setPreferredSize(new Dimension(150, 40));
+		closeButton.setFocusPainted(false);
+
+		closeButtonPanel.add(closeButton);
+		add(closeButtonPanel, BorderLayout.SOUTH);
+
+		setPreferredSize(new Dimension(400, 350));
+		pack();
+		setLocationRelativeTo(null);
+	}
+
+	private static JList<String> getHighScoreList(DefaultListModel<String> listModel) {
+		JList<String> highScoreList = new JList<>(listModel);
+		highScoreList.setSelectionModel(new DefaultListSelectionModel() {
+			@Override
+			public void setSelectionInterval(int index0, int index1) {}
+		});
+
+		highScoreList.setCellRenderer(new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				if (index % 2 == 1) {
+					c.setBackground(new Color(240, 240, 240));
+				} else {
+					c.setBackground(Color.WHITE);
+				}
+				c.setFont(new Font("Arial", Font.PLAIN, 18));
+				return c;
+			}
+		});
+		return highScoreList;
+	}
+
+	public void refreshHighScores() {
+		DefaultListModel<String> model = new DefaultListModel<>();
 		List<HighScoreManager.HighScore> highScores = highScoreManager.getHighScores();
 		for (HighScoreManager.HighScore score : highScores) {
-			listModel.addElement(score.toString());
+			model.addElement(score.toString());
 		}
-
-		JList<String> highScoreList = new JList<>(listModel);
-		highScoreList.setFont(new Font("Arial", Font.PLAIN, 16));
-		JScrollPane scrollPane = new JScrollPane(highScoreList);
-		panel.add(scrollPane, BorderLayout.CENTER);
-
-		// Close Button
-		JButton closeButton = new JButton("Close");
-		closeButton.setFont(new Font("Arial", Font.PLAIN, 14));
-		closeButton.addActionListener(e -> dispose());
-		panel.add(closeButton, BorderLayout.SOUTH);
-
-		// Add panel to dialog
-		add(panel);
+		highScoreList.setModel(model);
 	}
+
 }
