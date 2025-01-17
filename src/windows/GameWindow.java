@@ -10,8 +10,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 public class GameWindow extends JFrame {
 	private final List<Country> countries;
@@ -25,12 +23,6 @@ public class GameWindow extends JFrame {
 	private final JProgressBar vaccineProgressBar;
 	private final JLabel timerLabel;
 	private final GameTimerManager timerManager;
-	private ScheduledFuture<?> randomTransportTask;
-	private ScheduledFuture<?> infectionRateTask;
-	private ScheduledFuture<?> labProgressTask;
-	private ScheduledFuture<?> iconSpawnerTask;
-	private ScheduledFuture<?> vaccineTransportTask;
-	private ScheduledFuture<?> gameTimerTask;
 	private int score = 0;
 	private int points = 0;
 	private final String difficulty;
@@ -347,13 +339,13 @@ public class GameWindow extends JFrame {
 	}
 
 	private void startTimers() {
-		gameTimerTask = timerManager.scheduleAtFixedRate(() -> SwingUtilities.invokeLater(() -> {
+		Thread gameTimerTask = timerManager.scheduleAtFixedRate(() -> SwingUtilities.invokeLater(() -> {
 			updateGameLogic();
 			int elapsedTime = Integer.parseInt(timerLabel.getText().replace("Time: ", "").replace("s", "")) + 1;
 			timerLabel.setText("Time: " + elapsedTime + "s");
-		}), 0, 1, TimeUnit.SECONDS);
+		}), 0, 1000);
 
-		infectionRateTask = timerManager.scheduleAtFixedRate(() -> {
+		Thread infectionRateTask = timerManager.scheduleAtFixedRate(() -> {
 			infectionRate += 0.01;
 			for (Country country : countries) country.setInfectionRate(infectionRate);
 			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
@@ -362,41 +354,41 @@ public class GameWindow extends JFrame {
 					"Mutation Alert",
 					JOptionPane.WARNING_MESSAGE
 			));
-		}, 30, 30, TimeUnit.SECONDS);
+		}, 30000, 30000);
 
-		labProgressTask = timerManager.scheduleAtFixedRate(() -> {
+		Thread labProgressTask = timerManager.scheduleAtFixedRate(() -> {
 			if (laboratoryCount > 0) {
 				SwingUtilities.invokeLater(() -> {
 					int currentProgress = vaccineProgressBar.getValue();
 					vaccineProgressBar.setValue(Math.min(currentProgress + laboratoryCount, 100));
 				});
 			}
-		}, 7, 7, TimeUnit.SECONDS);
+		}, 7000, 7000);
 
-		iconSpawnerTask = timerManager.scheduleAtFixedRate(() -> {
+		Thread iconSpawnerTask = timerManager.scheduleAtFixedRate(() -> {
 			if (isInfectionStarted && !countries.isEmpty()) {
 				Country randomCountry = countries.get((int) (Math.random() * countries.size()));
 				SwingUtilities.invokeLater(() -> spawnPointIcon(randomCountry));
 			}
-		}, 8, 8, TimeUnit.SECONDS);
+		}, 8000, 8000);
 
-		randomTransportTask = timerManager.scheduleAtFixedRate(() -> {
+		Thread randomTransportTask = timerManager.scheduleAtFixedRate(() -> {
 			if (!transports.isEmpty()) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
 				if (randomTransport.isRouteOperational()) {
 					randomTransport.startTransport(false);
 				}
 			}
-		}, 3, 2, TimeUnit.SECONDS);
+		}, 3000, 2000);
 
-		vaccineTransportTask = timerManager.scheduleAtFixedRate(() -> {
+		Thread vaccineTransportTask = timerManager.scheduleAtFixedRate(() -> {
 			if (!transports.isEmpty() && vaccineDistribution) {
 				Transport randomTransport = transports.get((int) (Math.random() * transports.size()));
 				if (randomTransport.isRouteOperational()) {
 					randomTransport.startTransport(true);
 				}
 			}
-		}, 7, 7, TimeUnit.SECONDS);
+		}, 7000, 7000);
 	}
 
 	private void spawnPointIcon(Country country) {
@@ -540,14 +532,8 @@ public class GameWindow extends JFrame {
 	}
 
 	private void stopAllTimers() {
-		if (infectionRateTask != null) infectionRateTask.cancel(true);
-		if (labProgressTask != null) labProgressTask.cancel(true);
-		if (iconSpawnerTask != null) iconSpawnerTask.cancel(true);
-		if (randomTransportTask != null) randomTransportTask.cancel(true);
-		if (vaccineTransportTask != null) vaccineTransportTask.cancel(true);
-		if (gameTimerTask != null) gameTimerTask.cancel(true);
-		transportThread.interrupt();
 		timerManager.shutdown();
+		transportThread.interrupt();
 	}
 
 	private void addScore() {
