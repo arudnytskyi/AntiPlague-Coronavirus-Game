@@ -22,6 +22,7 @@ public class Transport {
 	private int currentStep;
 	private double stepX, stepY;
 	private static double sanitationEffect = 1.0;
+	private static boolean infectionFreeZones = false;
 	private static boolean rapidTestingEnabled = false;
 	private static boolean vaccinePriority = false;
 
@@ -136,6 +137,10 @@ public class Transport {
 	}
 
 	public boolean isRouteOperational() {
+		if (infectionFreeZones && !origin.isInfected() && !destination.isInfected()) {
+			return true;
+		}
+
 		if (GameWindow.getGlobalAwareness() >= 70 && !vaccinePriority) {
 			return false;
 		}
@@ -205,5 +210,9 @@ public class Transport {
 
 	public static void setVaccinePriority(boolean enabled) {
 		vaccinePriority = enabled;
+	}
+
+	public static void setInfectionFreeZones(boolean enabled) {
+		infectionFreeZones = enabled;
 	}
 }

@@ -131,8 +131,9 @@ public class GameWindow extends JFrame {
 		}));
 
 		upgradeList.add(new Upgrade("Cancel Mutation", 1, "Decreases the infection rate by 0.01 (1%).", () -> {
-			if (infectionRate > 0.9) {
-				infectionRate -= 0.01;
+			if (infectionRate > 0.5) {
+				infectionRate -= 0.3;
+				for (Country country : countries) country.setInfectionRate(infectionRate);
 				JOptionPane.showMessageDialog(this, "Mutation canceled! Infection rate decreased by 1%.",
 						"Upgrade Successful", JOptionPane.INFORMATION_MESSAGE);
 			} else {
@@ -152,7 +153,7 @@ public class GameWindow extends JFrame {
 		}));
 
 		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", () -> {
-			markInfectionFreeZones();
+			Transport.setInfectionFreeZones(true);
 			JOptionPane.showMessageDialog(this, "Infection-Free Zone protocols established. Routes between infection-free countries will remain open.");
 		}));
 
@@ -162,7 +163,7 @@ public class GameWindow extends JFrame {
 		}));
 
 		upgradeList.add(new Upgrade("Media Campaign", 1, "Delay route closures by calming public fears.", () -> {
-			GameWindow.adjustGlobalAwareness(-10);
+			GameWindow.adjustGlobalAwareness(-30);
 			JOptionPane.showMessageDialog(this, "Media Campaign launched. Public awareness lowered, delaying potential route closures.");
 		}));
 
@@ -313,6 +314,7 @@ public class GameWindow extends JFrame {
 
 		infectionRateTask = timerManager.scheduleAtFixedRate(() -> {
 			infectionRate += 0.01;
+			for (Country country : countries) country.setInfectionRate(infectionRate);
 			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
 					null,
 					"The virus has mutated! Infection rate increased.",
