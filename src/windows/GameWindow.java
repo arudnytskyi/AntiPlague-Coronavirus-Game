@@ -238,23 +238,26 @@ public class GameWindow extends JFrame {
 				Country origin = countries.get(i);
 				Country destination = countries.get(j);
 
-				// Plain: Allowed between any two countries
-				transportList.add(new Transport("Airline", origin, destination, mapPanel));
+				// Plane: (A -> B or B -> A)
+				if (origin.getName().compareTo(destination.getName()) < 0) {
+					transportList.add(new Transport("Airline", origin, destination, mapPanel));
 
-				// Train: Only if in the same continent
-				if (origin.getContinent().equals(destination.getContinent())) {
-					transportList.add(new Transport("Train", origin, destination, mapPanel));
+					// Ship: (A -> B or B -> A)
+					if (!origin.getContinent().equals(destination.getContinent())) {
+						transportList.add(new Transport("Ship", origin, destination, mapPanel));
+					}
 				}
 
-				// Ship: Only if in different continents
-				if (!origin.getContinent().equals(destination.getContinent())) {
-					transportList.add(new Transport("Ship", origin, destination, mapPanel));
+				// Train: (A -> B and B -> A)
+				if (origin.getContinent().equals(destination.getContinent())) {
+					transportList.add(new Transport("Train", origin, destination, mapPanel));
 				}
 			}
 		}
 
 		return transportList;
 	}
+
 
 	private void promptForFirstInfectedCountry() {
 		SwingUtilities.invokeLater(() -> {
