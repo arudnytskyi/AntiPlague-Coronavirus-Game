@@ -84,9 +84,6 @@ public class MainMenu extends JFrame {
 		actionMap.put("returnToMenu", new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Ctrl+Shift+Q pressed. Returning to main menu.");
-				// Add logic to return to main menu
-				// For now, just ensure this MainMenu window is visible
 				setVisible(true);
 			}
 		});

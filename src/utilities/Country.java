@@ -91,7 +91,8 @@ public class Country {
 
 	public void updateInfection() {
 		if (infected && normalPopulation > 0) {
-			int newInfections = (int) Math.ceil(infectedPopulation * (infectionRate+infectionResistance));
+			double infectionFactor = infectionRate * (1 - (double) infectedPopulation / getTotalPopulation());
+			int newInfections = (int) Math.ceil(infectedPopulation * infectionFactor);
 			newInfections = Math.min(newInfections, normalPopulation);
 
 			normalPopulation -= newInfections;

@@ -168,23 +168,23 @@ public class GameWindow extends JFrame {
 	private List<Upgrade> initializeUpgrades() {
 		List<Upgrade> upgradeList = new ArrayList<>();
 
-		upgradeList.add(new Upgrade("Vaccine Research", 1, "Adds +5% to vaccine development.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Research", 10, "Adds +5% to vaccine development.", () -> {
 			int currentProgress = vaccineProgressBar.getValue();
 			vaccineProgressBar.setValue(Math.min(currentProgress + 5, 100));
 			JOptionPane.showMessageDialog(this, "Vaccine research progressed by +5%.");
 		}));
 
-		upgradeList.add(new Upgrade("Build Laboratory", 1, "Adds a laboratory that increases vaccine progress over time.", () -> {
+		upgradeList.add(new Upgrade("Build Laboratory", 25, "Adds a laboratory that increases vaccine progress over time.", () -> {
 			laboratoryCount++;
 			JOptionPane.showMessageDialog(this, "Laboratory built! Vaccine progress will now increase over time.");
 		}));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution", 1, "Enable vaccine distribution via transport.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Distribution", 40, "Enable vaccine distribution via transport.", () -> {
 			vaccineDistribution = true;
 			JOptionPane.showMessageDialog(this, "Vaccine distribution via transport enabled.");
 		}));
 
-		upgradeList.add(new Upgrade("Cancel Mutation", 1, "Decreases the infection rate by 0.01 (1%).", () -> {
+		upgradeList.add(new Upgrade("Cancel Mutation", 30, "Decreases the infection rate by 0.03.", () -> {
 			if (infectionRate > 0.5) {
 				infectionRate -= 0.3;
 				for (Country country : countries) country.setInfectionRate(infectionRate);
@@ -196,27 +196,27 @@ public class GameWindow extends JFrame {
 			}
 		}));
 
-		upgradeList.add(new Upgrade("Sanitation Protocols", 1, "Reduce infection spread during transport by 50%.", () -> {
+		upgradeList.add(new Upgrade("Sanitation Protocols", 50, "Reduce infection spread during transport by 50%.", () -> {
 			Transport.setSanitationEffect(0.5);
 			JOptionPane.showMessageDialog(this, "Sanitation Protocols Activated! Infection probability during transport reduced by 50%.");
 		}));
 
-		upgradeList.add(new Upgrade("Rapid Testing", 1, "Reopen transport routes faster after infection levels drop.", () -> {
+		upgradeList.add(new Upgrade("Rapid Testing", 20, "Reopen transport routes faster after infection levels drop.", () -> {
 			Transport.setRapidTesting(true);
 			JOptionPane.showMessageDialog(this, "Rapid Testing Deployed! Transport routes will reopen faster after infection drops.");
 		}));
 
-		upgradeList.add(new Upgrade("Infection-Free Zones", 1, "Keep routes between infection-free countries open.", () -> {
+		upgradeList.add(new Upgrade("Infection-Free Zones", 25, "Keep routes between infection-free countries open.", () -> {
 			Transport.setInfectionFreeZones(true);
 			JOptionPane.showMessageDialog(this, "Infection-Free Zone protocols established. Routes between infection-free countries will remain open.");
 		}));
 
-		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 1, "Prioritize vaccine delivery routes.", () -> {
+		upgradeList.add(new Upgrade("Vaccine Distribution Networks", 50, "Prioritize vaccine delivery routes.", () -> {
 			Transport.setVaccinePriority(true);
 			JOptionPane.showMessageDialog(this, "Vaccine Distribution Networks established. Vaccine delivery routes will be prioritized.");
 		}));
 
-		upgradeList.add(new Upgrade("Media Campaign", 1, "Delay route closures by calming public fears.", () -> {
+		upgradeList.add(new Upgrade("Media Campaign", 20, "Delay route closures by calming public fears.", () -> {
 			GameWindow.adjustGlobalAwareness(-30);
 			JOptionPane.showMessageDialog(this, "Media Campaign launched. Public awareness lowered, delaying potential route closures.");
 		}));
@@ -244,9 +244,9 @@ public class GameWindow extends JFrame {
 				{"UK", 450, 50, "Europe", 0.11, 68000000, 243610.0},
 				{"France", 490, 100, "Europe", 0.1, 65000000, 551695.0},
 				{"Germany", 550, 150, "Europe", 0.07, 83000000, 357022.0},
-				{"India", 650, 300, "Asia", 0.15, 1390000000, 3287263.0},
-				{"China", 700, 200, "Asia", 0.13, 1440000000, 9596961.0},
-				{"Australia", 730, 400, "Australia", 0.06, 26000000, 7692024.0}
+				{"India", 640, 300, "Asia", 0.15, 1390000000, 3287263.0},
+				{"China", 680, 200, "Asia", 0.13, 1440000000, 9596961.0},
+				{"Australia", 710, 400, "Australia", 0.06, 26000000, 7692024.0}
 		};
 
 		for (Object[] data : countryData) {
@@ -387,7 +387,7 @@ public class GameWindow extends JFrame {
 					randomTransport.startTransport(false);
 				}
 			}
-		}, 3, 3, TimeUnit.SECONDS);
+		}, 3, 2, TimeUnit.SECONDS);
 
 		vaccineTransportTask = timerManager.scheduleAtFixedRate(() -> {
 			if (!transports.isEmpty() && vaccineDistribution) {
@@ -405,12 +405,10 @@ public class GameWindow extends JFrame {
 		int offsetY = (int) (Math.random() * 50 - 25);
 		int iconSize = 25;
 
-		// Set the initial position of the icon relative to the country's position
 		int iconX = country.getX() + offsetX;
 		int iconY = country.getY() + offsetY;
 		icon.setBounds(iconX, iconY, iconSize, iconSize);
 
-		// Icon styling
 		boolean isInfected = country.isInfected();
 		int pointsEarned = isInfected ? 5 : 10;
 		icon.setText("+" + pointsEarned);
@@ -420,13 +418,11 @@ public class GameWindow extends JFrame {
 		icon.setOpaque(true);
 		icon.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
-		// Add icon to the layeredPane and activeIcons list
 		layeredPane.add(icon, JLayeredPane.POPUP_LAYER);
 		layeredPane.revalidate();
 		layeredPane.repaint();
 		activeIcons.add(icon);
 
-		// Attach action listener to the icon
 		icon.addActionListener(e -> {
 			score += pointsEarned;
 			points += pointsEarned;
@@ -437,7 +433,6 @@ public class GameWindow extends JFrame {
 			activeIcons.remove(icon);
 		});
 
-		// Timer to automatically remove the icon after 10 seconds
 		Timer removeTimer = new Timer(10000, ev -> {
 			layeredPane.remove(icon);
 			layeredPane.revalidate();
@@ -447,13 +442,10 @@ public class GameWindow extends JFrame {
 		removeTimer.setRepeats(false);
 		removeTimer.start();
 
-		// Store the association between the icon and the country
 		icon.putClientProperty("country", country);
 		icon.putClientProperty("offsetX", offsetX);
 		icon.putClientProperty("offsetY", offsetY);
 	}
-
-
 
 	public static int getGlobalAwareness() {
 		return globalAwareness;
@@ -473,7 +465,7 @@ public class GameWindow extends JFrame {
 		}
 
 		int newAwareness = (int) ((double) totalInfected / totalPopulation * 100);
-		adjustGlobalAwareness(newAwareness - globalAwareness); // Adjust awareness gradually
+		adjustGlobalAwareness(newAwareness - globalAwareness);
 	}
 
 	private void updateGameLogic() {
@@ -487,7 +479,6 @@ public class GameWindow extends JFrame {
 		}
 
 		updateGlobalAwareness();
-
 		isGameOver();
 	}
 

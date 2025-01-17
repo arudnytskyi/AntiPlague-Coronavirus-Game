@@ -137,13 +137,11 @@ public class Transport {
 	}
 
 	public boolean isRouteOperational() {
-		if (infectionFreeZones && !origin.isInfected() && !destination.isInfected()) {
-			return true;
-		}
+		// infectionFreeZones update
+		if (infectionFreeZones && !origin.isInfected() && !destination.isInfected()) return true;
 
-		if (GameWindow.getGlobalAwareness() >= 70 && !vaccinePriority) {
-			return false;
-		}
+		// Global Awareness Restriction
+		if (GameWindow.getGlobalAwareness() >= 80 && !vaccinePriority) return false;
 
 		if (vaccinePriority) return true;
 
@@ -159,13 +157,10 @@ public class Transport {
 		}
 
 		// Population Density Restriction
-		if (type.equals("Train") && (origin.getPopulationDensity() > 500 || destination.getPopulationDensity() > 500)) return false;
+		if (type.equals("Train") && (origin.getPopulationDensity() > 700 || destination.getPopulationDensity() > 700)) return false;
 
 		// Proximity Restriction
 		if (type.equals("Bus") && !origin.getContinent().equals(destination.getContinent())) return false;
-
-		// Global Awareness Restriction
-		if (GameWindow.getGlobalAwareness() > 70 && !type.equals("Vaccine")) return false;
 
 		return true;
 	}
