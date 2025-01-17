@@ -1,27 +1,33 @@
 package utilities;
 
-import java.util.concurrent.*;
-
 public class GameTimerManager {
-	private final ScheduledExecutorService scheduler;
+	private Thread taskThread;
+	private boolean isRunning;
 
 	public GameTimerManager() {
-		this.scheduler = Executors.newScheduledThreadPool(6);
+		isRunning = true;
 	}
 
-	public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long initialDelay, long period, TimeUnit unit) {
-		return scheduler.scheduleAtFixedRate(task, initialDelay, period, unit);
+	public Thread scheduleAtFixedRate(Runnable task, long initialDelay, long periodMillis) {
+		taskThread = new Thread(() -> {
+			try {
+				Thread.sleep(initialDelay);
+				while (isRunning) {
+					task.run();
+					Thread.sleep(periodMillis);
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		});
+		taskThread.start();
+		return taskThread;
 	}
 
 	public void shutdown() {
-		try {
-			scheduler.shutdown();
-			if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
-				scheduler.shutdownNow();
-			}
-		} catch (InterruptedException e) {
-			scheduler.shutdownNow();
-			Thread.currentThread().interrupt();
+		isRunning = false;
+		if (taskThread != null && taskThread.isAlive()) {
+			taskThread.interrupt();
 		}
 	}
 }
