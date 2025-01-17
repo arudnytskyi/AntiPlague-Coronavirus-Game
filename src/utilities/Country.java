@@ -8,7 +8,8 @@ public class Country {
 	private final String continent;
 	private final JButton button;
 	private final int x, y;
-	private final double infectionRate;
+	private double infectionRate;
+	private double infectionResistance;
 	private final double area;
 	private boolean selectable = false;
 	private boolean infected = false;
@@ -17,13 +18,13 @@ public class Country {
 	private int infectedPopulation;
 	private int vaccinatedPopulation;
 
-	public Country(String name, int x, int y, String continent, double infectionRate, int totalPopulation, double area) {
+	public Country(String name, int x, int y, String continent, double infectionResistance, int totalPopulation, double area) {
 		this.name = name;
 		this.continent = continent;
 		this.area = area;
 		this.x = x;
 		this.y = y;
-		this.infectionRate = infectionRate;
+		this.infectionResistance = infectionResistance;
 		this.normalPopulation = totalPopulation;
 		this.infectedPopulation = 0;
 		this.vaccinatedPopulation = 0;
@@ -73,7 +74,7 @@ public class Country {
 				"Infected Population: %d (%.2f%%)%n" +
 				"Normal Population: %d (%.2f%%)%n" +
 				"Vaccinated Population: %d (%.2f%%)%n",
-				name, infectionRate,
+				name, infectionRate + infectionResistance,
 				infectedPopulation, infectedPercentage,
 				normalPopulation, normalPercentage,
 				vaccinatedPopulation, vaccinatedPercentage
@@ -83,8 +84,7 @@ public class Country {
 
 	public void updateInfection() {
 		if (infected && normalPopulation > 0) {
-			// Calculate new infections based on exponential growth
-			int newInfections = (int) Math.ceil(infectedPopulation * infectionRate);
+			int newInfections = (int) Math.ceil(infectedPopulation * (infectionRate+infectionResistance));
 			newInfections = Math.min(newInfections, normalPopulation);
 
 			normalPopulation -= newInfections;
@@ -146,8 +146,8 @@ public class Country {
 		updateButtonAppearance();
 	}
 
-	public double getInfectionRate() {
-		return infectionRate;
+	public void setInfectionRate(double infectionRate) {
+		this.infectionRate = infectionRate;
 	}
 
 	public double getPopulationDensity() {
@@ -180,10 +180,6 @@ public class Country {
 
 	public int getInfectedPopulation() {
 		return infectedPopulation;
-	}
-
-	public int getVaccinatedPopulation() {
-		return vaccinatedPopulation;
 	}
 
 	public int getTotalPopulation() {
