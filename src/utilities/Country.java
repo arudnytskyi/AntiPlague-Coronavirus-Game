@@ -7,9 +7,14 @@ public class Country {
 	private final String name;
 	private final String continent;
 	private final JButton button;
-	private final int x, y;
+	private final int width = 100;
+	private final int height = 35;
+	private final int originalX;
+	private final int originalY;
+	private int currentX;
+	private int currentY;
 	private double infectionRate;
-	private double infectionResistance;
+	private final double infectionResistance;
 	private final double area;
 	private boolean selectable = false;
 	private boolean infected = false;
@@ -22,8 +27,10 @@ public class Country {
 		this.name = name;
 		this.continent = continent;
 		this.area = area;
-		this.x = x;
-		this.y = y;
+		this.originalX = x;
+		this.originalY = y;
+		this.currentX = x;
+		this.currentY = y;
 		this.infectionResistance = infectionResistance;
 		this.normalPopulation = totalPopulation;
 		this.infectedPopulation = 0;
@@ -35,7 +42,7 @@ public class Country {
 		button.setFocusPainted(false);
 		button.setContentAreaFilled(false);
 		button.setContentAreaFilled(true);
-		button.setBounds(x, y, 100, 35);
+		button.setBounds(currentX, currentY, width, height);
 		button.addActionListener(e -> interact());
 		updateButtonAppearance();
 	}
@@ -162,12 +169,31 @@ public class Country {
 		return continent;
 	}
 
+	public int getOriginalX() {
+		return originalX;
+	}
+
+	public int getOriginalY() {
+		return originalY;
+	}
+
 	public int getX() {
-		return x;
+		return currentX;
 	}
 
 	public int getY() {
-		return y;
+		return currentY;
+	}
+
+	public void setPosition(int x, int y) {
+		this.currentX = x;
+		this.currentY = y;
+
+		button.setBounds(x, y, width, height);
+	}
+
+	public Point getPosition() {
+		return new Point(currentX, currentY);
 	}
 
 	public boolean isVaccinated() {

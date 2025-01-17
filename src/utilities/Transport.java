@@ -200,6 +200,24 @@ public class Transport {
 		mapPanel.repaint();
 	}
 
+	public void updateRoute(Point originPoint, Point destinationPoint) {
+		// Update the transport icon's position to match the new origin
+		transportIcon.setLocation(originPoint.x, originPoint.y);
+
+		// Recalculate the movement steps
+		int dx = destinationPoint.x - originPoint.x;
+		int dy = destinationPoint.y - originPoint.y;
+		double distance = Math.sqrt(dx * dx + dy * dy);
+
+		totalSteps = (int) (distance * 2); // Adjust the step count proportionally
+		stepX = (double) dx / totalSteps;
+		stepY = (double) dy / totalSteps;
+
+		// Update the display of the transport icon if necessary
+		mapPanel.revalidate();
+		mapPanel.repaint();
+	}
+
 	public static void setSanitationEffect(double effect) {
 		sanitationEffect = effect;
 	}
@@ -214,5 +232,13 @@ public class Transport {
 
 	public static void setInfectionFreeZones(boolean enabled) {
 		infectionFreeZones = enabled;
+	}
+
+	public Country getOrigin() {
+		return origin;
+	}
+
+	public Country getDestination() {
+		return destination;
 	}
 }

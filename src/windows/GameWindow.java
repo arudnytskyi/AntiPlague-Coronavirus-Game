@@ -5,6 +5,8 @@ import utilities.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -108,7 +110,59 @@ public class GameWindow extends JFrame {
 
 		addKeyBindings(panel);
 
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				int newWidth = mapPanel.getWidth();
+				int newHeight = mapPanel.getHeight();
+
+				layeredPane.setBounds(0, 0, newWidth, newHeight);
+
+				mapPanel.revalidate();
+
+				if (transports != null) {
+					adjustComponentSizes();
+				}
+			}
+		});
+
+		setResizable(true);
 		setVisible(true);
+	}
+
+	private void adjustComponentSizes() {
+		SwingUtilities.invokeLater(() -> {
+			int newWidth = layeredPane.getWidth();
+			int newHeight = layeredPane.getHeight();
+
+			double widthScale = (double) newWidth / 800;
+			double heightScale = (double) newHeight / 500;
+
+			for (Country country : countries) {
+				int scaledX = (int) (country.getOriginalX() * widthScale);
+				int scaledY = (int) (country.getOriginalY() * heightScale);
+				country.setPosition(scaledX, scaledY);
+			}
+
+			for (JButton icon : activeIcons) {
+				Country country = (Country) icon.getClientProperty("country");
+				int offsetX = (int) icon.getClientProperty("offsetX");
+				int offsetY = (int) icon.getClientProperty("offsetY");
+
+				int scaledX = (int) (country.getOriginalX() * widthScale) + offsetX;
+				int scaledY = (int) (country.getOriginalY() * heightScale) + offsetY;
+
+				icon.setBounds(scaledX, scaledY, icon.getWidth(), icon.getHeight());
+			}
+
+			for (Transport transport : transports) {
+				Point originPoint = transport.getOrigin().getPosition();
+				Point destinationPoint = transport.getDestination().getPosition();
+				transport.updateRoute(originPoint, destinationPoint);
+			}
+
+			layeredPane.repaint();
+		});
 	}
 
 	private List<Upgrade> initializeUpgrades() {
@@ -183,16 +237,16 @@ public class GameWindow extends JFrame {
 
 		// Countries with their coordinates, continent assignments, infection rate, and population
 		Object[][] countryData = {
-				{"USA", 70, 100, "North America", 0.12, 331000000, 9833520.0},
-				{"Canada", 170, 50, "North America", 0.08, 38000000, 9984670.0},
-				{"Mexico", 120, 200, "North America", 0.09, 126000000, 1964375.0},
-				{"Brazil", 210, 300, "South America", 0.14, 213000000, 8515767.0},
-				{"UK", 470, 50, "Europe", 0.11, 68000000, 243610.0},
-				{"France", 520, 100, "Europe", 0.1, 65000000, 551695.0},
-				{"Germany", 570, 150, "Europe", 0.07, 83000000, 357022.0},
-				{"India", 670, 300, "Asia", 0.15, 1390000000, 3287263.0},
-				{"China", 720, 200, "Asia", 0.13, 1440000000, 9596961.0},
-				{"Australia", 770, 400, "Australia", 0.06, 26000000, 7692024.0}
+				{"USA", 50, 100, "North America", 0.12, 331000000, 9833520.0},
+				{"Canada", 150, 50, "North America", 0.08, 38000000, 9984670.0},
+				{"Mexico", 90, 200, "North America", 0.09, 126000000, 1964375.0},
+				{"Brazil", 190, 300, "South America", 0.14, 213000000, 8515767.0},
+				{"UK", 450, 50, "Europe", 0.11, 68000000, 243610.0},
+				{"France", 490, 100, "Europe", 0.1, 65000000, 551695.0},
+				{"Germany", 550, 150, "Europe", 0.07, 83000000, 357022.0},
+				{"India", 650, 300, "Asia", 0.15, 1390000000, 3287263.0},
+				{"China", 700, 200, "Asia", 0.13, 1440000000, 9596961.0},
+				{"Australia", 730, 400, "Australia", 0.06, 26000000, 7692024.0}
 		};
 
 		for (Object[] data : countryData) {
@@ -210,22 +264,6 @@ public class GameWindow extends JFrame {
 		}
 
 		return countryList;
-	}
-
-	private void markInfectionFreeZones() {
-		SwingUtilities.invokeLater(() -> {
-			for (Country country : countries) {
-				if (!country.isInfected()) {
-					System.out.println(country.getName() + " is infection-free.");
-				}
-			}
-			JOptionPane.showMessageDialog(
-					this,
-					"Infection-Free Zones updated. Transport routes between infection-free countries will remain active.",
-					"Infection-Free Zones",
-					JOptionPane.INFORMATION_MESSAGE
-			);
-		});
 	}
 
 	private List<Transport> initializeTransports(JPanel mapPanel) {
@@ -367,8 +405,12 @@ public class GameWindow extends JFrame {
 		int offsetY = (int) (Math.random() * 50 - 25);
 		int iconSize = 25;
 
-		icon.setBounds(country.getX() + offsetX, country.getY() + offsetY, iconSize, iconSize);
+		// Set the initial position of the icon relative to the country's position
+		int iconX = country.getX() + offsetX;
+		int iconY = country.getY() + offsetY;
+		icon.setBounds(iconX, iconY, iconSize, iconSize);
 
+		// Icon styling
 		boolean isInfected = country.isInfected();
 		int pointsEarned = isInfected ? 5 : 10;
 		icon.setText("+" + pointsEarned);
@@ -378,11 +420,13 @@ public class GameWindow extends JFrame {
 		icon.setOpaque(true);
 		icon.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 
+		// Add icon to the layeredPane and activeIcons list
 		layeredPane.add(icon, JLayeredPane.POPUP_LAYER);
 		layeredPane.revalidate();
 		layeredPane.repaint();
 		activeIcons.add(icon);
 
+		// Attach action listener to the icon
 		icon.addActionListener(e -> {
 			score += pointsEarned;
 			points += pointsEarned;
@@ -393,6 +437,7 @@ public class GameWindow extends JFrame {
 			activeIcons.remove(icon);
 		});
 
+		// Timer to automatically remove the icon after 10 seconds
 		Timer removeTimer = new Timer(10000, ev -> {
 			layeredPane.remove(icon);
 			layeredPane.revalidate();
@@ -401,7 +446,13 @@ public class GameWindow extends JFrame {
 		});
 		removeTimer.setRepeats(false);
 		removeTimer.start();
+
+		// Store the association between the icon and the country
+		icon.putClientProperty("country", country);
+		icon.putClientProperty("offsetX", offsetX);
+		icon.putClientProperty("offsetY", offsetY);
 	}
+
 
 
 	public static int getGlobalAwareness() {
@@ -435,7 +486,6 @@ public class GameWindow extends JFrame {
 			}
 		}
 
-		// Update global awareness after infection updates
 		updateGlobalAwareness();
 
 		isGameOver();
