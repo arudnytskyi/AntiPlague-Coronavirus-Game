@@ -28,13 +28,12 @@ public class Country {
 		this.infectedPopulation = 0;
 		this.vaccinatedPopulation = 0;
 
-		// Create a button to represent the country
 		button = new JButton(name);
-		button.setOpaque(true); // Ensures background color is visible
-		button.setBorderPainted(false); // Disables the border painting
-		button.setFocusPainted(false); // Removes the focus border
-		button.setContentAreaFilled(false); // Removes default button padding
-		button.setContentAreaFilled(true); // Re-enables the content area to use background color
+		button.setOpaque(true);
+		button.setBorderPainted(false);
+		button.setFocusPainted(false);
+		button.setContentAreaFilled(false);
+		button.setContentAreaFilled(true);
 		button.setBounds(x, y, 100, 35);
 		button.addActionListener(e -> interact());
 		updateButtonAppearance();
@@ -96,11 +95,10 @@ public class Country {
 	public void updateVaccination() {
 		if (vaccinated && (normalPopulation > 0 || infectedPopulation > 0)) {
 			double randomRate = 1 + (Math.random() * 2);
-			// Calculate new vaccinations with a fixed rate
+
 			int newVaccinations = (int) Math.ceil(vaccinatedPopulation * randomRate);
 			newVaccinations = Math.min(newVaccinations, normalPopulation + infectedPopulation);
 
-			// Allocate vaccinations to infected and normal populations
 			int vaccinatableFromInfected = Math.min(newVaccinations, infectedPopulation);
 			infectedPopulation -= vaccinatableFromInfected;
 			vaccinatedPopulation += vaccinatableFromInfected;
@@ -114,7 +112,7 @@ public class Country {
 	public void setInfected(boolean infected) {
 		this.infected = infected;
 		if (infected && infectedPopulation == 0) {
-			infectedPopulation = 1; // Start with at least one infected individual
+			infectedPopulation = 1;
 		}
 		updateButtonAppearance();
 	}
@@ -122,7 +120,7 @@ public class Country {
 	public void setVaccinated(boolean vaccinated) {
 		this.vaccinated = vaccinated;
 		if (vaccinated && vaccinatedPopulation == 0) {
-			vaccinatedPopulation = 1; // Start with at least one vaccinated individual
+			vaccinatedPopulation = 1;
 		}
 		updateButtonAppearance();
 	}
@@ -194,9 +192,5 @@ public class Country {
 
 	public boolean isAllInfected() {
 		return infectedPopulation == getTotalPopulation();
-	}
-
-	public boolean isNoInfectionsLeft() {
-		return infectedPopulation == 0;
 	}
 }

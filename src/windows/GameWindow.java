@@ -13,10 +13,11 @@ import java.util.concurrent.TimeUnit;
 
 public class GameWindow extends JFrame {
 	private final List<Country> countries;
-	private final List<Transport> transports;
+	private List<Transport> transports;
+	private Thread transportThread;
 	private final List<Upgrade> upgrades;
-	private List<JButton> activeIcons;
-	private JPanel mapPanel;
+	private final List<JButton> activeIcons;
+	private final JPanel mapPanel;
 	private final JLayeredPane layeredPane;
 	private final JLabel scoreLabel;
 	private final JProgressBar vaccineProgressBar;
@@ -93,7 +94,6 @@ public class GameWindow extends JFrame {
 
 		upgrades = initializeUpgrades();
 		countries = initializeCountries(mapPanel);
-		transports = initializeTransports(mapPanel);
 		activeIcons = new ArrayList<>();
 
 		promptForFirstInfectedCountry();
@@ -267,6 +267,8 @@ public class GameWindow extends JFrame {
 			for (Country country : countries) {
 				country.setSelectable(true);
 			}
+			transportThread = new Thread(() -> transports = initializeTransports(mapPanel));
+			transportThread.start();
 
 			new Thread(() -> {
 				boolean countrySelected = false;
@@ -498,6 +500,7 @@ public class GameWindow extends JFrame {
 		if (randomTransportTask != null) randomTransportTask.cancel(true);
 		if (vaccineTransportTask != null) vaccineTransportTask.cancel(true);
 		if (gameTimerTask != null) gameTimerTask.cancel(true);
+		transportThread.interrupt();
 		timerManager.shutdown();
 	}
 
