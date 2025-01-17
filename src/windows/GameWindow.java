@@ -72,8 +72,8 @@ public class GameWindow extends JFrame {
 		timerLabel.setFont(new Font("Arial", Font.BOLD, 16));
 		topPanel.add(timerLabel);
 
-		vaccineProgressBar = new JProgressBar(0, 100); // Progress from 0 to 100
-		vaccineProgressBar.setValue(0); // Initial value
+		vaccineProgressBar = new JProgressBar(0, 100);
+		vaccineProgressBar.setValue(0);
 		vaccineProgressBar.setStringPainted(true);
 		vaccineProgressBar.setFont(new Font("Arial", Font.BOLD, 12));
 		topPanel.add(vaccineProgressBar);
@@ -106,7 +106,6 @@ public class GameWindow extends JFrame {
 
 		add(panel);
 
-		setupMainTimer();
 		addKeyBindings(panel);
 
 		setVisible(true);
@@ -175,7 +174,6 @@ public class GameWindow extends JFrame {
 		UpgradeStoreDialog store = new UpgradeStoreDialog(this, upgrades, points);
 		store.setVisible(true);
 
-		// Update remaining points after closing the store
 		points = store.getRemainingPoints();
 	}
 
@@ -305,6 +303,12 @@ public class GameWindow extends JFrame {
 	}
 
 	private void startTimers() {
+		gameTimerTask = timerManager.scheduleAtFixedRate(() -> SwingUtilities.invokeLater(() -> {
+			updateGameLogic();
+			int elapsedTime = Integer.parseInt(timerLabel.getText().replace("Time: ", "").replace("s", "")) + 1;
+			timerLabel.setText("Time: " + elapsedTime + "s");
+		}), 0, 1, TimeUnit.SECONDS);
+
 		infectionRateTask = timerManager.scheduleAtFixedRate(() -> {
 			infectionRate += 0.01;
 			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
@@ -329,7 +333,7 @@ public class GameWindow extends JFrame {
 				Country randomCountry = countries.get((int) (Math.random() * countries.size()));
 				SwingUtilities.invokeLater(() -> spawnPointIcon(randomCountry));
 			}
-		}, 12, 12, TimeUnit.SECONDS);
+		}, 8, 8, TimeUnit.SECONDS);
 
 		randomTransportTask = timerManager.scheduleAtFixedRate(() -> {
 			if (!transports.isEmpty()) {
@@ -338,7 +342,7 @@ public class GameWindow extends JFrame {
 					randomTransport.startTransport(false);
 				}
 			}
-		}, 4, 4, TimeUnit.SECONDS);
+		}, 3, 3, TimeUnit.SECONDS);
 
 		vaccineTransportTask = timerManager.scheduleAtFixedRate(() -> {
 			if (!transports.isEmpty() && vaccineDistribution) {
@@ -348,16 +352,6 @@ public class GameWindow extends JFrame {
 				}
 			}
 		}, 7, 7, TimeUnit.SECONDS);
-	}
-
-	private void setupMainTimer() {
-		gameTimerTask = timerManager.scheduleAtFixedRate(() -> {
-			SwingUtilities.invokeLater(() -> {
-				updateGameLogic();
-				int elapsedTime = Integer.parseInt(timerLabel.getText().replace("Time: ", "").replace("s", "")) + 1;
-				timerLabel.setText("Time: " + elapsedTime + "s");
-			});
-		}, 0, 1, TimeUnit.SECONDS);
 	}
 
 	private void spawnPointIcon(Country country) {
@@ -446,18 +440,17 @@ public class GameWindow extends JFrame {
 
 		for (Country country : countries) {
 			if (country.getInfectedPopulation() > 0) {
-				noInfectionsLeft = false; // Infection still exists
+				noInfectionsLeft = false;
 			}
 			if (!country.isAllInfected()) {
-				allInfected = false; // Not all countries are infected
+				allInfected = false;
 			}
 		}
 
-		// Trigger game over based on conditions
 		if (allInfected && isInfectionStarted) {
-			endGame(false); // Game lost: all countries infected
+			endGame(false);
 		} else if (noInfectionsLeft && isInfectionStarted) {
-			endGame(true); // Game won: no infections left
+			endGame(true);
 		}
 	}
 
