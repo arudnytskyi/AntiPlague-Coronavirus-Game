@@ -8,19 +8,19 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 public class Transport {
-	private String type; // "Airline", "Ship", "Train"
-	private Country origin;
-	private Country destination;
-	private JLabel transportIcon;
+	private final String type; // "Airline", "Ship", "Train"
+	private final Country origin;
+	private final Country destination;
+	private final JLabel transportIcon;
+	private final JPanel mapPanel;
+	private final ImageIcon normalIcon;
+	private final ImageIcon infectedIcon;
+	private final ImageIcon vaccineIcon;
+	private static final int ICON_SIZE = 30;
 	private Timer animationTimer;
-	private JPanel mapPanel;
 	private int totalSteps;
 	private int currentStep;
 	private double stepX, stepY;
-	private static final int ICON_SIZE = 30; // Desired icon size (width and height)
-	private ImageIcon normalIcon;
-	private ImageIcon infectedIcon;
-	private ImageIcon vaccineIcon;
 	private static double sanitationEffect = 1.0;
 	private static boolean rapidTestingEnabled = false;
 	private static boolean vaccinePriority = false;
@@ -32,9 +32,9 @@ public class Transport {
 		this.mapPanel = mapPanel;
 
 		// Load and scale the original icon
-		normalIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + ".png"), ICON_SIZE, ICON_SIZE);
-		infectedIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_infected.png"), ICON_SIZE, ICON_SIZE);
-		vaccineIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_vaccine.png"), ICON_SIZE, ICON_SIZE);
+		normalIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + ".png"));
+		infectedIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_infected.png"));
+		vaccineIcon = scaleIcon(new ImageIcon("images/" + type.toLowerCase() + "_vaccine.png"));
 
 		transportIcon = new JLabel(normalIcon);
 		transportIcon.setBounds(origin.getX(), origin.getY(), ICON_SIZE, ICON_SIZE);
@@ -44,14 +44,12 @@ public class Transport {
 		mapPanel.repaint();
 	}
 
-	private ImageIcon scaleIcon(ImageIcon originalIcon, int width, int height) {
-		// Scale the image to fit within the specified dimensions
-		Image scaledImage = originalIcon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+	private ImageIcon scaleIcon(ImageIcon originalIcon) {
+		Image scaledImage = originalIcon.getImage().getScaledInstance(Transport.ICON_SIZE, Transport.ICON_SIZE, Image.SCALE_SMOOTH);
 		return new ImageIcon(scaledImage);
 	}
 
 	private ImageIcon rotateIcon(ImageIcon icon, double angle) {
-		// Rotate the icon image
 		Image originalImage = icon.getImage();
 		int w = originalImage.getWidth(null);
 		int h = originalImage.getHeight(null);
@@ -59,7 +57,6 @@ public class Transport {
 		BufferedImage rotatedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = rotatedImage.createGraphics();
 
-		// Apply rotation around the center of the image
 		AffineTransform transform = new AffineTransform();
 		transform.translate(w / 2.0, h / 2.0);
 		transform.rotate(angle);
@@ -73,7 +70,6 @@ public class Transport {
 	}
 
 	public void startTransport(boolean forVaccine) {
-		// Calculate distance and duration
 		int dx = destination.getX() - origin.getX();
 		int dy = destination.getY() - origin.getY();
 		double distance = Math.sqrt(dx * dx + dy * dy);
@@ -84,20 +80,16 @@ public class Transport {
 		stepX = (double) dx / totalSteps;
 		stepY = (double) dy / totalSteps;
 
-		// Determine if the transport is infected
 		double infectionProbability = (double) origin.getInfectedPopulation() / origin.getNormalPopulation() * sanitationEffect;;
 		boolean isInfected = Math.random() < infectionProbability;
 
-		// Calculate angle for rotation (in radians)
 		double angle = Math.atan2(dy, dx);
 		ImageIcon icon = forVaccine ? vaccineIcon : (isInfected ? infectedIcon : normalIcon);
 
-		// Set initial position and visibility
 		transportIcon.setIcon(rotateIcon(icon, angle));
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		transportIcon.setVisible(true);
 
-		// Start the animation timer
 		animationTimer = new Timer(10, e -> animateTransport(isInfected, forVaccine));
 		animationTimer.start();
 	}
@@ -144,18 +136,14 @@ public class Transport {
 	}
 
 	public boolean isRouteOperational() {
-		if (GameWindow.getGlobalAwareness() >= 70) {
-			if (!vaccinePriority) {
-				return false; // All routes are closed unless vaccine priority is enabled
-			}
+		if (GameWindow.getGlobalAwareness() >= 70 && !vaccinePriority) {
+			return false;
 		}
+
+		if (vaccinePriority) return true;
 
 		double originInfection = (double) origin.getInfectedPopulation() / origin.getNormalPopulation();
 		double destinationInfection = (double) destination.getInfectedPopulation() / destination.getNormalPopulation();
-
-		if (vaccinePriority) {
-			return true;
-		}
 
 		// Infection Level Restriction with Rapid Testing
 		if (type.equals("Airline") && (originInfection > 0.2 || destinationInfection > 0.2)) {
@@ -201,7 +189,6 @@ public class Transport {
 			animationTimer = null;
 		}
 
-		// Hide the transport icon and reset its position
 		transportIcon.setVisible(false);
 		transportIcon.setLocation(origin.getX(), origin.getY());
 		mapPanel.revalidate();
@@ -218,9 +205,5 @@ public class Transport {
 
 	public static void setVaccinePriority(boolean enabled) {
 		vaccinePriority = enabled;
-	}
-
-	public String getType() {
-		return this.type;
 	}
 }
